@@ -2,7 +2,7 @@ define([
     'jquery',
     'base/js/namespace',
     'base/js/events',
-], function ($, Jupyter, events) {
+    ], function($, Jupyter, events) {
     "use strict";
 
     function sendRequest(json_data) {
@@ -27,10 +27,16 @@ define([
             });
     }
 
-    function saveLogs(time, kernelId, notebookName, event, cell, cellNumber) {
-        const cellSource = cell.get_text();
-        const cellIndex = cell.cell_id;
-
+    function saveLogs(time, sessionId, kernelId, notebookName, event, cell, cellNumber) {
+        console.log(cell, cell === undefined)
+        if (cell === undefined) {
+            var cellSource = "";
+            var cellIndex = "";
+        }
+        else {
+            var cellSource = cell.get_text();
+            var cellIndex = cell.cell_id;
+        }
         var logs = {
             "time": time,
             "kernel_id": kernelId,
@@ -39,6 +45,7 @@ define([
             "cell_index": cellIndex,
             "cell_num": cellNumber,
             "cell_source": cellSource,
+            "session_id": sessionId
         };
 
         sendRequest(JSON.stringify(logs));
@@ -49,19 +56,24 @@ define([
             'create.Cell',
             'delete.Cell',
             'execute.CodeCell',
-            'rendered.MarkdownCell'
+            'rendered.MarkdownCell',
+            'notebook_renamed.Notebook',
+            'kernel_interrupting.Kernel',
+            'kernel_restarting.Kernel',
         ];
 
-        events.on(tracked_events.join(' '), function (evt, data) {
+        events.on(tracked_events.join(' '), function(evt, data) {
             const kernelId = Jupyter.notebook.kernel.id;
             const notebookName = Jupyter.notebook.notebook_name;
             const cellNumber = Jupyter.notebook.get_selected_index();
             const cell = data.cell
-            saveLogs((new Date()).toISOString(), kernelId, notebookName, evt.type, cell, cellNumber);
+            const sessionId = Jupyter.notebook.session.id
+
+            saveLogs((new Date()).toISOString(), sessionId, kernelId, notebookName, evt.type, cell, cellNumber);
         });
     }
 
-    function DeleteUpAndDownButtons() {
+    function DeleteUpAndDownButtons(){
         var btn_up = document.querySelector('.btn.btn-default[title="move selected cells up"]');
         var btn_down = document.querySelector('.btn.btn-default[title="move selected cells down"]');
 
@@ -79,7 +91,7 @@ define([
             DeleteUpAndDownButtons();
 
         } else {
-            events.on('notebook_loaded.Notebook', function () {
+            events.on('notebook_loaded.Notebook', function() {
                 registerEvents();
                 DeleteUpAndDownButtons();
 

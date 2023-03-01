@@ -19,7 +19,11 @@ db = SQLAlchemy(app)
 def render_logs_database():
     data = db.session.query(UserLogs).all()
     rows = [d.as_dict() for d in data]
-    columns = ("time", "kernel_id", "notebook_name", "cell_index", "cell_num", "event", "cell_source")
+    columns = (
+        "time", "session_id", "kernel_id",
+        "notebook_name", "cell_index", "cell_num",
+        "event", "cell_source"
+    )
 
     return render_template('db_template.html', rows=rows, columns=columns)
 

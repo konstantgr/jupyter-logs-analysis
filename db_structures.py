@@ -12,6 +12,7 @@ class UserLogs(base):
 
     id = Column(Integer, primary_key=True)
     time = Column(String(50))
+    session_id = Column(String(50), default=None)
     kernel_id = Column(String(50))
     notebook_name = Column(String(50))
     event = Column(String(50))

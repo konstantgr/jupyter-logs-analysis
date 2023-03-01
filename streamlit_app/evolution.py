@@ -34,7 +34,8 @@ class Snapshot:
         }
 
         cell = Cell(cell_index=cell_index, cell_num=cell_num, cell_source=cell_source)
-        self.actions_mapping[action](cell)
+        if action in self.actions_mapping:
+            self.actions_mapping[action](cell)
 
     def delete_cell(self, cell: Cell) -> None:
         num = [i for i, c in enumerate(self.cells_list) if c.cell_index == cell.cell_index][0]
