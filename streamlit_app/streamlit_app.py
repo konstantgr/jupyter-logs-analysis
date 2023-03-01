@@ -2,9 +2,10 @@ import streamlit as st
 
 from pathlib import Path
 
-from data_tools import get_databases, load_data, get_group
 from evolution import NotebookEvolution
+from data_tools import get_databases, load_data, get_group
 from graph_tools import evolution_to_graphviz, evolution_to_networkx, draw_nx_graph
+from st_tools import check_password
 
 
 def app_main_loop():
@@ -43,7 +44,7 @@ def app_main_loop():
 
 
 if __name__ == '__main__':
-    # authorize = check_password()
+    authorize = check_password()
     authorize = True
     if authorize:
         app_main_loop()

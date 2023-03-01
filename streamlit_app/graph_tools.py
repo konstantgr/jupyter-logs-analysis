@@ -12,7 +12,6 @@ def evolution_to_execution_path(
         min_snap_num: int = 1,
         hash_string_num: int = 8,
 ) -> List[Tuple[str, str]]:
-
     edges, prev_cell_index = [], "0"
     executions = filter(
         lambda x: x.log.get('event') == "execute",
@@ -35,7 +34,6 @@ def evolution_to_graphviz(
         min_snap_num: int = 1,
         hash_string_num: int = 8,
 ) -> graphviz.Digraph:
-
     graph = graphviz.Digraph()
     graph.attr(rankdir='LR', size='8,8')
 
@@ -55,7 +53,6 @@ def evolution_to_networkx(
         min_snap_num: int = 1,
         hash_string_num: int = 8,
 ) -> nx.MultiDiGraph:
-
     graph = nx.MultiDiGraph()
     edges = evolution_to_execution_path(
         evolution, max_snap_num, min_snap_num, hash_string_num
@@ -70,7 +67,6 @@ def draw_nx_graph(
         graph: nx.MultiDiGraph,
         fig_ax: [Tuple, None] = None
 ) -> Tuple:
-
     if fig_ax is None:
         fig, ax = plt.subplots(figsize=(5, 5))
     else:

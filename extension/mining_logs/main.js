@@ -1,17 +1,18 @@
 define([
+    'jquery',
     'base/js/namespace',
-    'base/js/events'
-], function(Jupyter, events) {
+    'base/js/events',
+], function ($, Jupyter, events) {
     "use strict";
 
     function sendRequest(json_data) {
         fetch("http://3.249.245.244:9999/", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: json_data
-            })
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: json_data
+        })
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -51,22 +52,37 @@ define([
             'rendered.MarkdownCell'
         ];
 
-        events.on(tracked_events.join(' '), function(evt, data) {
+        events.on(tracked_events.join(' '), function (evt, data) {
             const kernelId = Jupyter.notebook.kernel.id;
             const notebookName = Jupyter.notebook.notebook_name;
             const cellNumber = Jupyter.notebook.get_selected_index();
             const cell = data.cell
-
             saveLogs((new Date()).toISOString(), kernelId, notebookName, evt.type, cell, cellNumber);
         });
+    }
+
+    function DeleteUpAndDownButtons() {
+        var btn_up = document.querySelector('.btn.btn-default[title="move selected cells up"]');
+        var btn_down = document.querySelector('.btn.btn-default[title="move selected cells down"]');
+
+        if (btn_up) {
+            btn_up.parentNode.removeChild(btn_up);
+        }
+        if (btn_down) {
+            btn_down.parentNode.removeChild(btn_down);
+        }
     }
 
     function loadExtension() {
         if (Jupyter.notebook) {
             registerEvents();
+            DeleteUpAndDownButtons();
+
         } else {
-            events.on('notebook_loaded.Notebook', function() {
+            events.on('notebook_loaded.Notebook', function () {
                 registerEvents();
+                DeleteUpAndDownButtons();
+
             });
         }
     }

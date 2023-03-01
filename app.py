@@ -5,7 +5,6 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from db_structures import UserLogs
 
-
 basedir = os.path.abspath(os.path.dirname(__file__))
 db_name = 'data/user_activity.db'
 app = Flask(__name__)
