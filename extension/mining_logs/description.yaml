@@ -1,0 +1,9 @@
+Type: Jupyter Notebook Extension
+Compatibility: 3.x, 4.x, 5.x, 6.x
+Name: Logs mining extension
+Main: main.js
+Link: README.md
+Description: |
+  Save logs of execution, adding and deleting of cells in notebook
+Parameters:
+    - none
