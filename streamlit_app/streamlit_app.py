@@ -8,6 +8,15 @@ from graph_tools import evolution_to_graphviz, evolution_to_networkx, draw_nx_gr
 from st_tools import check_password
 
 
+def get_pdf_file(graph):
+
+    graph.render('streamlit_app/figures/Digraph.gv.pdf').replace('\\', '/')
+    with open("streamlit_app/figures/Digraph.gv.pdf", "rb") as pdf_file:
+        pdf_file = pdf_file.read()
+
+    return pdf_file
+
+
 def app_main_loop():
     dbs = get_databases(Path("data/"))
     dbs_dict = {db.name: db for db in dbs}
@@ -27,6 +36,20 @@ def app_main_loop():
 
         g_gv = evolution_to_graphviz(evol, snap_num + 1)
         st.graphviz_chart(g_gv)
+
+        # st.download_button(
+        #     label="Download graph as png",
+        #     data=csv,
+        #     file_name='large_df.csv',
+        #     mime='text/csv',
+        # )
+
+        # st.download_button(
+        #     label="Download graph as PDF",
+        #     data=get_pdf_file(g_gv),
+        #     file_name=f'graph_snapshot_num_{snap_num}.pdf',
+        #     mime='application/octet-stream',
+        # )
 
         st.header("Event")
         st.warning(snap.log)

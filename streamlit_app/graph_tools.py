@@ -44,6 +44,18 @@ def evolution_to_graphviz(
     for i, edge in enumerate(edges):
         graph.edge(*edge, label=f"{i}")
 
+    deleted_cells = [
+        x.log.get('cell_index')
+        for x in evolution.snapshots[min_snap_num:max_snap_num]
+        if x.log.get('event') == "delete"
+    ]
+
+    for cell_index in deleted_cells:
+        graph.node(
+            cell_index[:hash_string_num],
+            fillcolor='lightgrey', style='filled'
+        )
+
     return graph
 
 

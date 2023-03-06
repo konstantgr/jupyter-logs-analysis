@@ -21,7 +21,10 @@ class UserLogs(base):
     cell_source = Column(Text)
 
     def as_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        return {
+            c.name: getattr(self, c.name)
+            for c in self.__table__.columns
+        }
 
 
 def create_db(db_path: Path):
