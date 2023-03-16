@@ -2,7 +2,7 @@ import streamlit as st
 
 from pathlib import Path
 
-from evolution import NotebookEvolution
+from sequence import NotebookActionsSequence
 from data_tools import get_databases, load_data, get_group
 from graph_tools import evolution_to_graphviz, evolution_to_networkx, draw_nx_graph
 from st_tools import check_password
@@ -30,7 +30,7 @@ def app_main_loop():
     df_group = get_group(df, "kernel_id", kernel_option)
 
     try:
-        evol = NotebookEvolution(df_group)
+        evol = NotebookActionsSequence(df_group)
         snap_num = st.slider('Snapshot number', 0, len(evol.snapshots) - 1, 0)
         snap = evol.snapshots[snap_num]
 

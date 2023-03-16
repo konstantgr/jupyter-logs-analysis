@@ -3,11 +3,11 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from typing import List, Tuple
-from evolution import NotebookEvolution
+from sequence import NotebookActionsSequence
 
 
 def evolution_to_execution_path(
-        evolution: NotebookEvolution,
+        evolution: NotebookActionsSequence,
         max_snap_num: int,
         min_snap_num: int = 1,
         hash_string_num: int = 8,
@@ -29,7 +29,7 @@ def evolution_to_execution_path(
 
 
 def evolution_to_graphviz(
-        evolution: NotebookEvolution,
+        evolution: NotebookActionsSequence,
         max_snap_num: int,
         min_snap_num: int = 1,
         hash_string_num: int = 8,
@@ -60,7 +60,7 @@ def evolution_to_graphviz(
 
 
 def evolution_to_networkx(
-        evolution: NotebookEvolution,
+        evolution: NotebookActionsSequence,
         max_snap_num: int,
         min_snap_num: int = 1,
         hash_string_num: int = 8,
