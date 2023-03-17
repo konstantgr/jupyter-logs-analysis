@@ -1,11 +1,12 @@
 import streamlit as st
 
 from pathlib import Path
+from pdf2image import convert_from_bytes
 
 from sequence import NotebookActionsSequence
 from data_tools import get_databases, load_data, get_group
 from graph_tools import evolution_to_graphviz, evolution_to_networkx, draw_nx_graph
-from st_tools import check_password
+from st_tools import check_password, get_data
 
 
 def get_pdf_file(graph):
@@ -37,19 +38,32 @@ def app_main_loop():
         g_gv = evolution_to_graphviz(evol, snap_num + 1)
         st.graphviz_chart(g_gv)
 
-        # st.download_button(
-        #     label="Download graph as png",
-        #     data=csv,
-        #     file_name='large_df.csv',
-        #     mime='text/csv',
-        # )
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            if st.button('Prepare graph file', use_container_width=True):
+                disabled = False
+            else:
+                disabled = True
+                # graph_pdf = get_pdf_file(g_gv)
+                # images = convert_from_bytes(graph_pdf)
 
-        # st.download_button(
-        #     label="Download graph as PDF",
-        #     data=get_pdf_file(g_gv),
-        #     file_name=f'graph_snapshot_num_{snap_num}.pdf',
-        #     mime='application/octet-stream',
-        # )
+        with col2:
+            st.button('Download PDF', disabled=disabled, use_container_width=True)
+            # st.download_button(
+            #         label="Download graph as png",
+            #         data=images,
+            #         file_name=f'graph_snapshot_num_{snap_num}.png',
+            #         mime='text/csv',
+            # )
+
+        with col3:
+            st.button('Download PNG', disabled=disabled, use_container_width=True)
+            # st.download_button(
+            #     label="Download graph as PDF",
+            #     data=graph_pdf,
+            #     file_name=f'graph_snapshot_num_{snap_num}.pdf',
+            #     mime='application/octet-stream',
+            # )
 
         st.header("Event")
         st.warning(snap.log)

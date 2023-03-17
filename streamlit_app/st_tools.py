@@ -1,6 +1,11 @@
 import streamlit as st
 
 
+def get_data():
+    print(1)
+    return 1
+
+
 def check_password() -> bool:
     def password_entered():
         if st.session_state["password"] == st.secrets["password"]:
