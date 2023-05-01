@@ -18,7 +18,9 @@ class UserLogs(base):
     event = Column(String(50))
     cell_index = Column(String(50))
     cell_num = Column(Integer)
+    cell_type = Column(String(50))
     cell_source = Column(Text)
+    cell_output = Column(Text)
 
     def as_dict(self):
         return {
@@ -37,4 +39,4 @@ def create_db(db_path: Path):
 
 
 if __name__ == '__main__':
-    create_db(Path("data/test_db.db"))
+    create_db(Path("data/test_db2.db"))

@@ -6,7 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from db_structures import UserLogs
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-db_name = 'data/user_activity.db'
+db_name = 'data/test_db.db'
 app = Flask(__name__)
 CORS(app)
 
@@ -22,7 +22,7 @@ def render_logs_database():
     columns = (
         "time", "session_id", "kernel_id",
         "notebook_name", "cell_index", "cell_num",
-        "event", "cell_source"
+        "event", "cell_source", "cell_output"
     )
 
     return render_template('db_template.html', rows=rows, columns=columns)

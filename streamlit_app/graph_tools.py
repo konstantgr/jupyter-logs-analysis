@@ -20,8 +20,9 @@ def evolution_to_execution_path(
 
     for snap in executions:
         cell_num = snap.log.get('cell_num')
+        cell_idx = snap.nums_list.index(cell_num)
 
-        cur_cell_index = snap.cells_list[cell_num].cell_index[:hash_string_num]
+        cur_cell_index = snap.cells_list[cell_idx].cell_index[:hash_string_num]
         edges.append((prev_cell_index, cur_cell_index))
         prev_cell_index = cur_cell_index
 

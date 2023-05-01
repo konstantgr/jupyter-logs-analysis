@@ -1,4 +1,5 @@
 import streamlit as st
+import traceback
 
 from pathlib import Path
 from pdf2image import convert_from_bytes
@@ -6,7 +7,7 @@ from pdf2image import convert_from_bytes
 from sequence import NotebookActionsSequence
 from data_tools import get_databases, load_data, get_group
 from graph_tools import evolution_to_graphviz, evolution_to_networkx, draw_nx_graph
-from st_tools import check_password, get_data
+from st_tools import check_password
 
 
 def get_pdf_file(graph):
@@ -19,13 +20,13 @@ def get_pdf_file(graph):
 
 
 def app_main_loop():
-    dbs = get_databases(Path("data/"))
+    dbs = get_databases(Path("../data/"))
     dbs_dict = {db.name: db for db in dbs}
     db_option = st.selectbox('Select database', dbs_dict.keys())
     df = load_data(dbs_dict.get(db_option))
 
     st.write('You selected:', dbs_dict.get(db_option))
-    st.dataframe(df.tail(5))
+    st.dataframe(df)
 
     kernel_option = st.selectbox('Select `kernel_id`', df.kernel_id.unique())
     df_group = get_group(df, "kernel_id", kernel_option)
@@ -34,6 +35,7 @@ def app_main_loop():
         evol = NotebookActionsSequence(df_group)
         snap_num = st.slider('Snapshot number', 0, len(evol.snapshots) - 1, 0)
         snap = evol.snapshots[snap_num]
+        st.warning(snap.nums_list)
 
         g_gv = evolution_to_graphviz(evol, snap_num + 1)
         st.graphviz_chart(g_gv)
@@ -76,7 +78,8 @@ def app_main_loop():
         # fig, ax = draw_nx_graph(g_nx)
         # st.pyplot(fig)
 
-    except IndexError:
+    except Exception as e:
+        st.error(traceback.format_exc())
         st.warning("Something wrong with notebook evolution")
 
 
