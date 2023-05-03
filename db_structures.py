@@ -11,6 +11,7 @@ class UserLogs(base):
     __tablename__ = 'user_logs'
 
     id = Column(Integer, primary_key=True)
+    ip_address = Column(String(50))
     time = Column(String(50))
     session_id = Column(String(50), default=None)
     kernel_id = Column(String(50))

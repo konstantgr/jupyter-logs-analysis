@@ -6,7 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from db_structures import UserLogs
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-db_name = 'data/test_db.db'
+db_name = 'data/test_db2.db'
 app = Flask(__name__)
 CORS(app)
 
@@ -20,7 +20,7 @@ def render_logs_database():
     data = db.session.query(UserLogs).all()
     rows = [d.as_dict() for d in data]
     columns = (
-        "time", "session_id", "kernel_id",
+        "ip_address", "time", "session_id", "kernel_id",
         "notebook_name", "cell_index", "cell_num",
         "event", "cell_source", "cell_output"
     )
@@ -31,7 +31,8 @@ def render_logs_database():
 @app.route('/', methods=['GET', 'POST'])
 def add_message():
     content = request.json
-    print(content)
+    content['cell_source'] = str(content['cell_source']) if content['cell_source'] else None
+    content['cell_output'] = str(content['cell_output']) if content['cell_output'] else None
 
     user_log = UserLogs(**content)
     db.session.add(user_log)
