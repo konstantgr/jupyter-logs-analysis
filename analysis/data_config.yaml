@@ -1,0 +1,3 @@
+base_path: '../data/'
+expert_path: ["hack_professional_db.db"]
+student_path: ["hack_db.db"]

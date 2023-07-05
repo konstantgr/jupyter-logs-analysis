@@ -1,0 +1,3 @@
+database_rel_path: data/hack_db.db
+host: "0.0.0.0"
+port: 9999

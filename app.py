@@ -1,12 +1,24 @@
 import os
+import yaml
 
+from pathlib import Path
 from flask import request, Flask, render_template
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from db_structures import UserLogs
 
+
+with Path("app_config.yaml").open("r") as stream:
+    try:
+        config = yaml.safe_load(stream)
+    except yaml.YAMLError as exc:
+        exit()
+
 basedir = os.path.abspath(os.path.dirname(__file__))
-db_name = 'data/hack_db.db'
+db_name = config['database_rel_path']
+host = config['host']
+port = config['port']
+
 app = Flask(__name__)
 CORS(app)
 
@@ -41,4 +53,4 @@ def add_message():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=9999)
+    app.run(host=host, port=port)

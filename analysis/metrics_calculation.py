@@ -12,7 +12,7 @@ class MetricsCalculator:
         self.metrics_mapping = {
             'objects': self.get_objects_number,
             'sloc': self.get_sloc,
-            'ccn': self.get_cyclomatic_complexity()
+            'ccn': self.get_cyclomatic_complexity
         }
         self.source = source
         self.ast = self._get_ast(source)
@@ -66,6 +66,17 @@ def get_snapshot_complexity(snap: ExecutiveSnapshot) -> Dict:
         notebook_metrics.append(cell_metrics)
 
     metrics_df = pd.DataFrame(notebook_metrics)
+    if not list(metrics_df):
+        metrics_sum = {
+            f'{metric_name}_sum': 0
+            for metric_name in calculator.metrics_mapping.keys()
+        }
+        metrics_mean = {
+            f'{metric_name}_mean': 0
+            for metric_name in calculator.metrics_mapping.keys()
+        }
+        return {**metrics_sum, **metrics_mean}
+
     metrics_sum = {
         f'{metric_name}_sum': metrics_df[metric_name].sum()
         for metric_name in calculator.metrics_mapping.keys()

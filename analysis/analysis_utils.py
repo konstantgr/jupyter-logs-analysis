@@ -1,4 +1,33 @@
+import yaml
+import sqlite3
 import pandas as pd
+
+from pathlib import Path
+
+
+with Path("data_config.yaml").open("r") as stream:
+    try:
+        config = yaml.safe_load(stream)
+    except yaml.YAMLError as exc:
+        exit()
+
+
+def read_hackathon_data():
+    query = "SELECT * FROM user_logs"
+    base_path = Path(config['base_path'])
+
+    dataframes = []
+    for db_path in config['student_path']:
+        df_tmp = pd.read_sql_query(query, sqlite3.connect(base_path / db_path))
+        df_tmp['expert'] = False
+        dataframes.append(df_tmp)
+
+    for db_path in config['expert_path']:
+        df_tmp = pd.read_sql_query(query, sqlite3.connect(base_path / db_path))
+        df_tmp['expert'] = True
+        dataframes.append(df_tmp)
+
+    return pd.concat(dataframes)
 
 
 def get_sorted_kernels(df: pd.DataFrame) -> pd.DataFrame:
@@ -10,13 +39,6 @@ def get_sorted_kernels(df: pd.DataFrame) -> pd.DataFrame:
 def get_kernel_actions(df: pd.DataFrame, kernel_id: str) -> pd.DataFrame:
     return df.groupby('kernel_id').get_group(kernel_id)
 
-#
-# def calculate_metrics(df: pd.DataFrame) -> pd.DataFrame:
-#     df = df.dropna()
-#     df['ccn'] = df.cell_source.apply(lambda x: get_complexity(x))
-#     df['sloc'] = df.cell_source.apply(lambda x: get_sloc(x))
-#     df['len'] = df.cell_source.apply(lambda x: len(x))
-#     df['objects_num'] = df.cell_source.apply(lambda x: len(get_objects(x)))
-#     df = df.dropna()
 
-
+if __name__ == '__main__':
+    df_hack = read_hackathon_data()

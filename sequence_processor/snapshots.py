@@ -69,6 +69,9 @@ class ExecutiveSnapshot(SnapshotBase):
             del self.index_num_mapping[current_index]
             del self.index_order[list_index_to_remove]
 
+        if current_num is None:
+            return
+
         for i, (index_i, num_i) in enumerate(self.index_order):
             if num_i > current_num:
                 self.index_num_mapping[index_i] -= 1
@@ -100,7 +103,7 @@ class ExecutiveSnapshot(SnapshotBase):
             self.index_num_mapping[cell_index] = num
             self.index_order.append((cell_index, num))
 
-    def _delete_duplicates(self) -> None:
+    def delete_duplicates(self) -> None:
         list_index_to_delete = []
         for i, (index_i, num_i) in enumerate(self.index_order):
             for j, (index_j, num_j) in enumerate(self.index_order):
