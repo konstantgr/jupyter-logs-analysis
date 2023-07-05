@@ -6,7 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from db_structures import UserLogs
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-db_name = 'data/test_db2.db'
+db_name = 'data/hack_db.db'
 app = Flask(__name__)
 CORS(app)
 

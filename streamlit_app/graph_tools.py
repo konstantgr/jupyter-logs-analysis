@@ -2,48 +2,22 @@ import graphviz
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from typing import List, Tuple
-from sequence import NotebookActionsSequence
+from typing import List, Tuple, Any
+
+import sys
+
+sys.path.insert(0, '..')
+
+from sequence_processor.sequence import SequenceProcessor
 
 
 def evolution_to_execution_path(
-        evolution: NotebookActionsSequence,
+        evolution: SequenceProcessor,
         max_snap_num: int,
         min_snap_num: int = 1,
         hash_string_num: int = 8,
-) -> List[Tuple[str, str]]:
+) -> tuple[list[tuple[Any, Any]], list[Any]]:
     edges, prev_cell_index = [], "0"
-    executions = filter(
-        lambda x: x.log.get('event') == "execute",
-        evolution.snapshots[min_snap_num:max_snap_num]
-    )
-
-    for snap in executions:
-        cell_num = snap.log.get('cell_num')
-        cell_idx = snap.nums_list.index(cell_num)
-
-        cur_cell_index = snap.cells_list[cell_idx].cell_index[:hash_string_num]
-        edges.append((prev_cell_index, cur_cell_index))
-        prev_cell_index = cur_cell_index
-
-    return edges
-
-
-def evolution_to_graphviz(
-        evolution: NotebookActionsSequence,
-        max_snap_num: int,
-        min_snap_num: int = 1,
-        hash_string_num: int = 8,
-) -> graphviz.Digraph:
-    graph = graphviz.Digraph()
-    graph.attr(rankdir='LR', size='8,8')
-
-    edges = evolution_to_execution_path(
-        evolution, max_snap_num, min_snap_num, hash_string_num
-    )
-
-    for i, edge in enumerate(edges):
-        graph.edge(*edge, label=f"{i}")
 
     deleted_cells = [
         x.log.get('cell_index')
@@ -51,17 +25,66 @@ def evolution_to_graphviz(
         if x.log.get('event') == "delete"
     ]
 
+    executions = filter(
+        lambda x: (x.log.get('event') == "execute") and (x.log.get('cell_index') not in []),
+        evolution.snapshots[min_snap_num:max_snap_num]
+    )
+
+    for snap in executions:
+        cell_index = snap.log.get('cell_index')
+
+        cur_cell_index = cell_index[:hash_string_num]
+        edges.append((prev_cell_index, cur_cell_index))
+        prev_cell_index = cur_cell_index
+
+    return edges, deleted_cells
+
+
+def evolution_to_graphviz(
+        evolution: SequenceProcessor,
+        max_snap_num: int,
+        min_snap_num: int = 1,
+        hash_string_num: int = 8,
+) -> graphviz.Digraph:
+    graph = graphviz.Digraph()
+
+    graph.attr(rankdir='LR', size='10,10')
+    graph.attr('edge', weight='0', arrowhead='none')
+
+    prev = '0'
+    for i, (index, _) in enumerate(evolution.snapshots[max_snap_num-1].index_order):
+        curr = index[:hash_string_num]
+        graph.edge(prev, curr, weight='0')
+        prev = curr
+
+
+    # graph.attr(rankdir='LR')
+    #
+    # for i, (index, _) in enumerate(evolution.snapshots[max_snap_num].index_order):
+    #     graph.node(index[:hash_string_num], weight='1')
+    #
+    edges, deleted_cells = evolution_to_execution_path(
+        evolution, max_snap_num, min_snap_num, hash_string_num
+    )
+
+    graph.attr('node', weight='0')
+
     for cell_index in deleted_cells:
         graph.node(
             cell_index[:hash_string_num],
             fillcolor='lightgrey', style='filled'
         )
 
+    graph.attr('edge', weight='0', arrowhead='vee')
+
+    for i, edge in enumerate(edges):
+        graph.edge(*edge, label=f"{i}")
+
     return graph
 
 
 def evolution_to_networkx(
-        evolution: NotebookActionsSequence,
+        evolution: SequenceProcessor,
         max_snap_num: int,
         min_snap_num: int = 1,
         hash_string_num: int = 8,

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 
 from typing import List
+from datetime import datetime
 from pathlib import Path
 from sqlalchemy import create_engine
 
@@ -24,6 +25,7 @@ def load_data(db_path: Path) -> pd.DataFrame:
         )
 
     df['time'] = pd.to_datetime(df['time'])
+    df['time'] = df.time.apply(lambda x: datetime.fromtimestamp(datetime.timestamp(x)))
     df = df.sort_values(by=['time']).replace({np.nan: None})
 
     return df

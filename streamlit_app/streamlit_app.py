@@ -3,8 +3,10 @@ import traceback
 
 from pathlib import Path
 from pdf2image import convert_from_bytes
+import sys
+sys.path.insert(0, '..')
 
-from sequence import NotebookActionsSequence
+from sequence_processor.sequence import SequenceProcessor
 from data_tools import get_databases, load_data, get_group
 from graph_tools import evolution_to_graphviz, evolution_to_networkx, draw_nx_graph
 from st_tools import check_password
@@ -32,12 +34,12 @@ def app_main_loop():
     df_group = get_group(df, "kernel_id", kernel_option)
 
     try:
-        evol = NotebookActionsSequence(df_group)
-        snap_num = st.slider('Snapshot number', 0, len(evol.snapshots) - 1, 0)
-        snap = evol.snapshots[snap_num]
-        st.warning(snap.nums_list)
+        processor = SequenceProcessor(df_group)
+        snap_num = st.slider('Snapshot number', 0, len(processor.snapshots) - 1, 0)
+        snap = processor.snapshots[snap_num]
+        st.warning(snap.index_order)
 
-        g_gv = evolution_to_graphviz(evol, snap_num + 1)
+        g_gv = evolution_to_graphviz(processor, snap_num + 1)
         st.graphviz_chart(g_gv)
 
         col1, col2, col3 = st.columns(3)
@@ -71,8 +73,8 @@ def app_main_loop():
         st.warning(snap.log)
 
         st.header("Notebook cells")
-        for cell in snap.cells_list:
-            st.code(f"# {cell.cell_index}\n\n" + cell.cell_source)
+        for (cell_index, cell_num) in snap.index_order:
+            st.code(f"# {cell_index}, {cell_num}\n\n{snap.index_source_mapping[cell_index]}")
 
         # g_nx = evolution_to_networkx(evol, snap_num)
         # fig, ax = draw_nx_graph(g_nx)
