@@ -2,17 +2,17 @@ import yaml
 import sqlite3
 import pandas as pd
 
+from typing import Dict
 from pathlib import Path
 
 
-with Path("data_config.yaml").open("r") as stream:
-    try:
-        config = yaml.safe_load(stream)
-    except yaml.YAMLError as exc:
-        exit()
+def read_config(config_path: Path) -> Dict:
+    with config_path.open("r") as stream:
+        return yaml.safe_load(stream)
 
 
-def read_hackathon_data():
+def read_hackathon_data(config_path: Path) -> pd.DataFrame:
+    config = read_config(config_path)
     query = "SELECT * FROM user_logs"
     base_path = Path(config['base_path'])
 
@@ -30,10 +30,12 @@ def read_hackathon_data():
     return pd.concat(dataframes)
 
 
-def get_sorted_kernels(df: pd.DataFrame) -> pd.DataFrame:
-    return pd.DataFrame(
-        df.groupby('kernel_id').size().sort_values(ascending=False).reset_index()
-    )
+def get_users_kernels(config_path: Path) -> Dict:
+    config = read_config(config_path)
+    return {
+        **{f'student_{i}': kernel_list for i, kernel_list in enumerate(config['students'])},
+        **{f'expert_{i}': kernel_list for i, kernel_list in enumerate(config['experts'])},
+    }
 
 
 def get_kernel_actions(df: pd.DataFrame, kernel_id: str) -> pd.DataFrame:
@@ -41,4 +43,7 @@ def get_kernel_actions(df: pd.DataFrame, kernel_id: str) -> pd.DataFrame:
 
 
 if __name__ == '__main__':
-    df_hack = read_hackathon_data()
+    path = Path("data_config.yaml")
+    df_hack = read_hackathon_data(path)
+    kernels = get_users_kernels(path)
+    print(kernels)
