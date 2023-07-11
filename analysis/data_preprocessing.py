@@ -1,4 +1,6 @@
 import ast
+
+import numpy as np
 import pandas as pd
 
 import code_diff as cd
@@ -12,6 +14,7 @@ from radon.raw import analyze
 from radon.visitors import ComplexityVisitor
 
 from analysis.data_loading import read_hackathon_data
+from sequence_processor.sequence import SequenceProcessor
 
 
 class MetricsProcessor:
@@ -114,9 +117,34 @@ class MetricsProcessor:
         self.metrics_dataframes['cell_metrics'] = resulted_df
         return resulted_df
 
+    def calculate_notebook_metrics(self, df: pd.DataFrame) -> pd.DataFrame:
+        grouped = df.groupby('kernel_id')
+        calculated_metrics = []
+        for kernel_id, g in tqdm(grouped):
+            processor = SequenceProcessor(
+                g.drop('expert', axis=1) \
+                    .fillna(np.NaN).replace(np.NaN, None).iloc[:]
+            )
+            for i, snap in enumerate(processor.snapshots[1:]):
+                snap.delete_duplicates()
+                calculated_metrics.append({
+                    'kernel_id': kernel_id,
+                    'snap_num': i,
+                    'cell_count': len(snap.index_order),
+                    **snap.log
+                })
+
+        metrics_df = pd.DataFrame(calculated_metrics)
+        # resulted_df = pd.concat([
+        #     df.reset_index(drop=True), metrics_df.reset_index(drop=True)
+        # ], axis=1)
+
+        self.metrics_dataframes['notebook_metrics'] = metrics_df
+        return metrics_df
+
 
 if __name__ == '__main__':
     path = Path("data_config.yaml")
     df_hack = read_hackathon_data(path)
     processor = MetricsProcessor()
-    print(processor.get_execution_transitions(df_hack))
+    print(processor.calculate_notebook_metrics(df_hack.iloc[:100]))
