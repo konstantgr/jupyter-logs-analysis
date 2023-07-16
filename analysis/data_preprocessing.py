@@ -103,19 +103,41 @@ class MetricsProcessor:
         self.metrics_dataframes['transitions'] = transitions_df
         return transitions_df
 
-    def calculate_cell_metrics(self, df: pd.DataFrame) -> pd.DataFrame:
+    def calculate_cell_metrics(self, df: pd.DataFrame, store: bool = True) -> pd.DataFrame:
         calculated_metrics = [
             {metric: fun(row.cell_source) for metric, fun
              in self.cell_metrics_mapping[row.event].items()}
-            for _, row in tqdm(df.iterrows())
+            for _, row in df.iterrows()
         ]
         metrics_df = pd.DataFrame(calculated_metrics)
         resulted_df = pd.concat([
             df.reset_index(drop=True), metrics_df.reset_index(drop=True)
         ], axis=1)
 
-        self.metrics_dataframes['cell_metrics'] = resulted_df
+        if store:
+            self.metrics_dataframes['cell_metrics'] = resulted_df
         return resulted_df
+
+    def aggregate_cells_metrics(self, snap, delete_duplicates: bool = True):
+        if delete_duplicates:
+            snap.delete_duplicates()
+
+        sources = [
+            snap.index_source_mapping[idx]
+            for idx, _ in snap.index_order
+        ]
+        df_tmp = pd.DataFrame({'cell_source': sources})
+        df_tmp['event'] = 'execute'
+
+        metrics = self.cell_metrics_mapping['execute'].keys()
+        df_tmp = self.calculate_cell_metrics(df_tmp, store=False)
+        df_metrics = df_tmp[metrics]
+
+        metrics_dict = df_metrics.agg(['mean', 'sum'])
+        metrics_dict = {f'{k1}_{k2}': v2
+               for k1, v1 in metrics_dict.items()
+               for k2, v2 in v1.items()}
+        return metrics_dict
 
     def calculate_notebook_metrics(self, df: pd.DataFrame) -> pd.DataFrame:
         grouped = df.groupby('kernel_id')
@@ -127,18 +149,20 @@ class MetricsProcessor:
             )
             for i, snap in enumerate(processor.snapshots[1:]):
                 snap.delete_duplicates()
+                try:
+                    metrics_dict = self.aggregate_cells_metrics(snap)
+                except KeyError:
+                    metrics_dict = {}
+
                 calculated_metrics.append({
                     'kernel_id': kernel_id,
                     'snap_num': i,
                     'cell_count': len(snap.index_order),
+                    **metrics_dict,
                     **snap.log
                 })
 
         metrics_df = pd.DataFrame(calculated_metrics)
-        # resulted_df = pd.concat([
-        #     df.reset_index(drop=True), metrics_df.reset_index(drop=True)
-        # ], axis=1)
-
         self.metrics_dataframes['notebook_metrics'] = metrics_df
         return metrics_df
 
@@ -147,4 +171,4 @@ if __name__ == '__main__':
     path = Path("data_config.yaml")
     df_hack = read_hackathon_data(path)
     processor = MetricsProcessor()
-    print(processor.calculate_notebook_metrics(df_hack.iloc[:100]))
+    print(processor.calculate_notebook_metrics(df_hack.iloc[:1000]).objects_sum.max())
