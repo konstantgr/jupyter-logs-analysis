@@ -2,11 +2,10 @@ import yaml
 import sqlite3
 import pandas as pd
 
-from typing import Dict
 from pathlib import Path
 
 
-def read_config(config_path: Path) -> Dict:
+def read_config(config_path: Path) -> dict:
     with config_path.open("r") as stream:
         return yaml.safe_load(stream)
 
@@ -30,7 +29,7 @@ def read_hackathon_data(config_path: Path) -> pd.DataFrame:
     return pd.concat(dataframes)
 
 
-def get_users_kernels(config_path: Path) -> Dict:
+def get_users_kernels(config_path: Path) -> dict:
     config = read_config(config_path)
     return {
         **{f'student_{i}': kernel_list for i, kernel_list in enumerate(config['students'])},
