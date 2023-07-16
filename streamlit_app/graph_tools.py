@@ -2,7 +2,8 @@ import graphviz
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from typing import List, Tuple, Any
+from typing import Tuple, Any
+import pydotplus
 
 import sys
 
@@ -83,6 +84,12 @@ def evolution_to_graphviz(
     return graph
 
 
+def graphviz2networkx(g):
+    dotplus = pydotplus.graph_from_dot_data(g.source)
+    nx_graph = nx.nx_pydot.from_pydot(dotplus)
+    return nx_graph
+
+
 def evolution_to_networkx(
         evolution: SequenceProcessor,
         max_snap_num: int,
@@ -94,8 +101,8 @@ def evolution_to_networkx(
         evolution, max_snap_num, min_snap_num, hash_string_num
     )
 
-    edges = [(*e, {'N': i}) for i, e in enumerate(edges)]
-    graph.add_edges_from(edges)
+    # edges = [(*e, {'N': i}) for i, e in enumerate(edges)]
+    graph.add_edges_from(edges[0])
     return graph
 
 

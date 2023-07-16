@@ -2,6 +2,7 @@ import ast
 
 import numpy as np
 import pandas as pd
+import networkx as nx
 
 import code_diff as cd
 
@@ -17,6 +18,8 @@ from ast import literal_eval
 from analysis.data_loading import read_hackathon_data
 from sequence_processor.sequence import SequenceProcessor
 from sequence_processor.snapshots import ExecutiveSnapshot
+
+from streamlit_app.graph_tools import evolution_to_networkx
 
 
 class MetricsProcessor:
@@ -225,12 +228,31 @@ class MetricsProcessor:
 
         return cell_df
 
-    def calculate_graph_metrics(self, g):
-        pass
+    @staticmethod
+    def calculate_graph_metrics(df: pd.DataFrame) -> pd.DataFrame:
+        grouped = df.groupby('kernel_id')
+        for kernel_id, g in tqdm(list(grouped)[1:]):
+            processor = SequenceProcessor(
+                g.drop('expert', axis=1) \
+                    .fillna(np.NaN).replace(np.NaN, None).iloc[:]
+            )
+            snap_num = len(processor.snapshots) - 1
+            G = evolution_to_networkx(processor, snap_num + 1)
+            H = nx.Graph(G)
+            H = nx.convert_node_labels_to_integers(H)
+            if G.nodes:
+                modularity = nx.community.modularity(H, nx.community.label_propagation_communities(H))
+                average_degree = 2 * len(G.edges) / len(G.nodes)
+                average_clustering = nx.average_clustering(H)
+                print(average_degree, average_clustering, modularity)
+
+        return pd.DataFrame()
 
 
 if __name__ == '__main__':
     path = Path("data_config.yaml")
     df_hack = read_hackathon_data(path)
     processor = MetricsProcessor()
-    print(processor.calculate_notebook_metrics(df_hack.iloc[:1000]).objects_sum.max())
+    print(processor.calculate_graph_metrics(df_hack.iloc[:1000]))
+
+    # print(processor.calculate_notebook_metrics(df_hack.iloc[:1000]).objects_sum.max())
