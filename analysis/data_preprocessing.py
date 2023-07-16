@@ -230,23 +230,31 @@ class MetricsProcessor:
 
     @staticmethod
     def calculate_graph_metrics(df: pd.DataFrame) -> pd.DataFrame:
+        metrics_list = []
         grouped = df.groupby('kernel_id')
         for kernel_id, g in tqdm(list(grouped)[1:]):
             processor = SequenceProcessor(
-                g.drop('expert', axis=1) \
-                    .fillna(np.NaN).replace(np.NaN, None).iloc[:]
+                g.drop('expert', axis=1).fillna(np.NaN).replace(np.NaN, None).iloc[:]
             )
             snap_num = len(processor.snapshots) - 1
             G = evolution_to_networkx(processor, snap_num + 1)
             H = nx.Graph(G)
             H = nx.convert_node_labels_to_integers(H)
+
+            modularity, average_degree, average_clustering = None, None, None
             if G.nodes:
                 modularity = nx.community.modularity(H, nx.community.label_propagation_communities(H))
                 average_degree = 2 * len(G.edges) / len(G.nodes)
                 average_clustering = nx.average_clustering(H)
-                print(average_degree, average_clustering, modularity)
 
-        return pd.DataFrame()
+            metrics_list.append({
+                'kernel_id': kernel_id,
+                'modularity': modularity,
+                'average_degree': average_degree,
+                'average_clustering': average_clustering
+            })
+
+        return pd.DataFrame(metrics_list)
 
 
 if __name__ == '__main__':
