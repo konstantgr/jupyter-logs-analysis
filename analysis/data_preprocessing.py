@@ -42,6 +42,11 @@ class MetricsProcessor:
             return self._get_ast(code_string)
 
     @staticmethod
+    def _preprocess_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
+        if 'expert' in list(df):
+            return df.drop('expert', axis=1).fillna(np.NaN).replace(np.NaN, None).iloc[:]
+
+    @staticmethod
     def _get_code_changes(prev: str | None, cur: str | None) -> List:
         try:
             output = cd.difference(prev, cur, lang="python")
@@ -145,13 +150,10 @@ class MetricsProcessor:
         return metrics_dict
 
     def calculate_notebook_metrics(self, df: pd.DataFrame) -> pd.DataFrame:
-        grouped = df.groupby('kernel_id')
+        grouped = self._preprocess_dataframe_columns(df).groupby('kernel_id')
         calculated_metrics = []
         for kernel_id, g in tqdm(grouped):
-            processor = SequenceProcessor(
-                g.drop('expert', axis=1) \
-                    .fillna(np.NaN).replace(np.NaN, None).iloc[:]
-            )
+            processor = SequenceProcessor(g)
             for i, snap in enumerate(processor.snapshots[1:]):
                 snap.delete_duplicates()
                 try:
@@ -229,38 +231,55 @@ class MetricsProcessor:
         return cell_df
 
     @staticmethod
-    def calculate_graph_metrics(df: pd.DataFrame) -> pd.DataFrame:
-        metrics_list = []
-        grouped = df.groupby('kernel_id')
+    def get_graph_modularity(G: nx.Graph) -> float | None:
+        if not len(G.nodes):
+            return None
+        H = nx.Graph(G)
+        community = nx.community.label_propagation_communities(H)
+        modularity = nx.community.modularity(H, community)
+        return modularity
+
+    @staticmethod
+    def get_graph_average_degree(G: nx.Graph) -> float | None:
+        if not len(G.nodes):
+            return None
+        return 2 * len(G.edges) / len(G.nodes)
+
+    @staticmethod
+    def get_graph_average_clustering(G: nx.Graph) -> float | None:
+        if not len(G.nodes):
+            return None
+        H = nx.Graph(G)
+        return nx.average_clustering(H)
+
+    def calculate_graph_metrics(self, df: pd.DataFrame) -> pd.DataFrame:
+        calculated_metrics = []
+        graph_metrics_mapping = {
+            'modularity': self.get_graph_modularity,
+            'average_degree': self.get_graph_average_degree,
+            'average_clustering': self.get_graph_average_clustering
+        }
+
+        grouped = self._preprocess_dataframe_columns(df).groupby('kernel_id')
         for kernel_id, g in tqdm(list(grouped)[1:]):
-            processor = SequenceProcessor(
-                g.drop('expert', axis=1).fillna(np.NaN).replace(np.NaN, None).iloc[:]
-            )
-            snap_num = len(processor.snapshots) - 1
-            G = evolution_to_networkx(processor, snap_num + 1)
-            H = nx.Graph(G)
-            H = nx.convert_node_labels_to_integers(H)
+            processor = SequenceProcessor(g)
+            G = evolution_to_networkx(processor, len(processor.snapshots))
 
-            modularity, average_degree, average_clustering = None, None, None
-            if G.nodes:
-                modularity = nx.community.modularity(H, nx.community.label_propagation_communities(H))
-                average_degree = 2 * len(G.edges) / len(G.nodes)
-                average_clustering = nx.average_clustering(H)
+            metrics_tmp = {}
+            for metric, fun in graph_metrics_mapping.items():
+                metrics_tmp[metric] = fun(G)
 
-            metrics_list.append({
+            calculated_metrics.append({
                 'kernel_id': kernel_id,
-                'modularity': modularity,
-                'average_degree': average_degree,
-                'average_clustering': average_clustering
+                **metrics_tmp
             })
 
-        return pd.DataFrame(metrics_list)
+        return pd.DataFrame(calculated_metrics)
 
 
 if __name__ == '__main__':
     path = Path("data_config.yaml")
     df_hack = read_hackathon_data(path)
-    processor = MetricsProcessor()
-    print(processor.calculate_graph_metrics(df_hack.iloc[:1000]))
-
-    # print(processor.calculate_notebook_metrics(df_hack.iloc[:1000]).objects_sum.max())
+    metrics_processor = MetricsProcessor()
+    graph_metrics = metrics_processor.calculate_graph_metrics(df_hack.iloc[:1000])
+    print(graph_metrics.head())
