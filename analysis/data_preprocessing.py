@@ -23,7 +23,7 @@ class MetricsProcessor:
         self.cell_metrics_mapping = defaultdict(dict)
         self.cell_metrics_mapping['execute'] = {
             'objects': self.get_objects_number,
-            # 'sloc': self.get_sloc,
+            'sloc': self.get_sloc,
             'ccn': self.get_cyclomatic_complexity
         }
         self.metrics_dataframes = defaultdict()
