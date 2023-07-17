@@ -10,7 +10,22 @@ def read_config(config_path: Path) -> dict:
         return yaml.safe_load(stream)
 
 
-def read_hackathon_data(config_path: Path) -> pd.DataFrame:
+def get_users_kernels(config_path: Path) -> pd.DataFrame:
+    config = read_config(config_path)
+    users_kernels_mapping = {
+        **{f'student_{i}': kernel_list for i, kernel_list in enumerate(config['students'])},
+        **{f'expert_{i}': kernel_list for i, kernel_list in enumerate(config['experts'])},
+    }
+    users = pd.DataFrame.from_dict(users_kernels_mapping, orient='index').melt()
+    users.columns = ['user_id', 'kernel_id']
+    return users
+
+
+def get_kernel_actions(df: pd.DataFrame, kernel_id: str) -> pd.DataFrame:
+    return df.groupby('kernel_id').get_group(kernel_id)
+
+
+def read_hackathon_data(config_path: Path, attach_users: bool = True) -> pd.DataFrame:
     config = read_config(config_path)
     query = "SELECT * FROM user_logs"
     base_path = Path(config['base_path'])
@@ -26,23 +41,16 @@ def read_hackathon_data(config_path: Path) -> pd.DataFrame:
         df_tmp['expert'] = True
         dataframes.append(df_tmp)
 
-    return pd.concat(dataframes)
+    df = pd.concat(dataframes)
 
+    if attach_users:
+        users = get_users_kernels(config_path)
+        df = df.merge(users, on='kernel_id')
 
-def get_users_kernels(config_path: Path) -> dict:
-    config = read_config(config_path)
-    return {
-        **{f'student_{i}': kernel_list for i, kernel_list in enumerate(config['students'])},
-        **{f'expert_{i}': kernel_list for i, kernel_list in enumerate(config['experts'])},
-    }
-
-
-def get_kernel_actions(df: pd.DataFrame, kernel_id: str) -> pd.DataFrame:
-    return df.groupby('kernel_id').get_group(kernel_id)
+    return df
 
 
 if __name__ == '__main__':
     path = Path("data_config.yaml")
     df_hack = read_hackathon_data(path)
-    kernels = get_users_kernels(path)
-    print(kernels)
+    print(df_hack.head())
