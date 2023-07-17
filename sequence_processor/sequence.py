@@ -1,9 +1,10 @@
-import pandas as pd
-
 from copy import deepcopy
 from typing import List
-from sequence_processor.snapshots import ExecutiveSnapshot
+
 import numpy as np
+import pandas as pd
+
+from sequence_processor.snapshots import ExecutiveSnapshot
 
 
 class SequenceProcessor:

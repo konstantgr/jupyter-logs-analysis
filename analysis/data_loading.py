@@ -1,8 +1,8 @@
-import yaml
 import sqlite3
-import pandas as pd
-
 from pathlib import Path
+
+import pandas as pd
+import yaml
 
 
 def read_config(config_path: Path) -> dict:

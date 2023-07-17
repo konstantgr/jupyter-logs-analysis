@@ -1,12 +1,12 @@
 import os
-import yaml
-
 from pathlib import Path
+
+import yaml
 from flask import request, Flask, render_template
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
-from db_structures import UserLogs
 
+from db_structures import UserLogs
 
 with Path("app_config.yaml").open("r") as stream:
     try:

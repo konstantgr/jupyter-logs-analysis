@@ -1,11 +1,10 @@
-import graphviz
-import networkx as nx
-import matplotlib.pyplot as plt
-
-from typing import Tuple, Any
-import pydotplus
-
 import sys
+from typing import Tuple, Any
+
+import graphviz
+import matplotlib.pyplot as plt
+import networkx as nx
+import pydotplus
 
 sys.path.insert(0, '..')
 

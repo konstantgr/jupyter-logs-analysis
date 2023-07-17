@@ -1,8 +1,8 @@
-import pandas as pd
 import json
-
-from enum import StrEnum
 from collections import deque
+from enum import StrEnum
+
+import pandas as pd
 
 from .snapshot_base import SnapshotBase, Cell
 

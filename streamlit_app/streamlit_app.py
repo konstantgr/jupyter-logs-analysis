@@ -1,14 +1,14 @@
-import streamlit as st
-import traceback
-
-from pathlib import Path
-from pdf2image import convert_from_bytes
 import sys
+import traceback
+from pathlib import Path
+
+import streamlit as st
+
 sys.path.insert(0, '..')
 
 from sequence_processor.sequence import SequenceProcessor
 from data_tools import get_databases, load_data, get_group
-from graph_tools import evolution_to_graphviz, evolution_to_networkx, draw_nx_graph
+from graph_tools import evolution_to_graphviz
 from st_tools import check_password
 
 

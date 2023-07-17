@@ -1,24 +1,20 @@
 import ast
-
-import numpy as np
-import pandas as pd
-import networkx as nx
-
-import code_diff as cd
-
-from pathlib import Path
+from ast import literal_eval
 from collections import defaultdict
+from pathlib import Path
 from typing import List, Dict
 
-from tqdm import tqdm
+import code_diff as cd
+import networkx as nx
+import numpy as np
+import pandas as pd
 from radon.raw import analyze
 from radon.visitors import ComplexityVisitor
-from ast import literal_eval
+from tqdm import tqdm
 
 from analysis.data_loading import read_hackathon_data
 from sequence_processor.sequence import SequenceProcessor
 from sequence_processor.snapshots import ExecutiveSnapshot
-
 from streamlit_app.graph_tools import evolution_to_networkx
 
 
