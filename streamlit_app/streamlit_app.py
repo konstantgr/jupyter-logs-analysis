@@ -13,7 +13,6 @@ from st_tools import check_password
 
 
 def get_pdf_file(graph):
-
     graph.render('streamlit_app/figures/Digraph.gv.pdf').replace('\\', '/')
     with open("streamlit_app/figures/Digraph.gv.pdf", "rb") as pdf_file:
         pdf_file = pdf_file.read()

@@ -52,11 +52,10 @@ def evolution_to_graphviz(
     graph.attr('edge', weight='0', arrowhead='none')
 
     prev = '0'
-    for i, (index, _) in enumerate(evolution.snapshots[max_snap_num-1].index_order):
+    for i, (index, _) in enumerate(evolution.snapshots[max_snap_num - 1].index_order):
         curr = index[:hash_string_num]
         graph.edge(prev, curr, weight='0')
         prev = curr
-
 
     # graph.attr(rankdir='LR')
     #
