@@ -109,6 +109,23 @@ class MetricsProcessor:
         self.metrics_dataframes['transitions'] = transitions_df
         return transitions_df
 
+    def get_event_transitions(self, df: pd.DataFrame) -> pd.DataFrame:
+        grouped = df.groupby('kernel_id')
+
+        transitions = []
+        for kernel_id, g in tqdm(grouped):
+            events_list = g.event.to_numpy()
+            events_transitions = list(zip(events_list, events_list[1:]))
+            transitions += [
+                {"kernel_id": kernel_id, 'event_from': start, 'event_to': finish}
+                for (start, finish) in events_transitions
+            ]
+
+        transitions_df = pd.DataFrame(transitions)
+
+        self.metrics_dataframes['events_transitions'] = transitions_df
+        return transitions_df
+
     def calculate_cell_metrics(self, df: pd.DataFrame, store: bool = True) -> pd.DataFrame:
         calculated_metrics = [
             {metric: fun(row.cell_source) for metric, fun
