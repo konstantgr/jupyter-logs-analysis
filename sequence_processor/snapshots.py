@@ -125,13 +125,15 @@ class ExecutiveSnapshot(SnapshotBase):
         self.log = {
             'event': action,
             'cell_num': cell_num,
-            'cell_index': cell_index
+            'cell_index': cell_index,
+            'cell_source': cell_source
         }
         if action == "save_notebook":
             self.initialize_indices(cell_source)
             return
 
-        self.index_source_mapping[cell_index] = cell_source
+        if action != "error":
+            self.index_source_mapping[cell_index] = cell_source
 
         cell = Cell(cell_index=cell_index, cell_num=cell_num)
 
