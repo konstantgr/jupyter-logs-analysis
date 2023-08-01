@@ -1,5 +1,5 @@
 base_path: '../data/'
-expert_path: [ "hack_professional_db.db" ]
+expert_path: [ "hack_professional_db.db", "hack_professional_2_db.db", "hack_professional_3_db.db" ]
 student_path: [ "hack_db.db" ]
 students: [
   [
@@ -41,11 +41,6 @@ students: [
     'f740b64e-0997-4bd5-bdd6-2b47c4251f71'
   ],
   [
-    'c1147ff4-c578-48ec-8feb-9573769648b8',
-    'dbe93969-24a0-4ea7-ae94-1737cb070287',
-    'f740b64e-0997-4bd5-bdd6-2b47c4251f71'
-  ],
-  [
     '36c724d9-3a5f-43e2-aba2-2d0933046f35',
     '8a599028-9e81-4862-ad7f-15500e742f27'
   ],
@@ -75,14 +70,8 @@ experts: [
     'fbb11760-eda3-4233-b800-12e732df766b'
   ],
   [
-    'c081cb5a-70a2-41fb-bba9-f07616119cc7',
-    'a0c5836a-0801-49c9-b8d7-8f781aabf83b',
     '54a27193-c1b6-4518-bd04-231572209afe',
     '232bcb48-7455-4109-9eeb-809649a6bedc',
-    '3179a989-9b41-49b9-84f8-5fe83a7c65bf',
-    'b23e387b-2ad6-4e47-b8fa-459a2dcda20a',
-    '1d8c1c38-d342-4950-9667-f8b9872d71b7',
-    '3ebfe9c5-4911-4400-a7c6-9d76b74ed979',
     '991072d2-8236-4242-9778-1a1d9ac500fa',
     'fd426e26-7c1f-44ca-aa8a-e1ad94cc4e1d',
     'a6d4d998-4bb4-4011-a768-1d33450442b8',
