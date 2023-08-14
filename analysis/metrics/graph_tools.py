@@ -1,4 +1,3 @@
-import sys
 from typing import Tuple, Any
 
 import graphviz
@@ -6,9 +5,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import pydotplus
 
-sys.path.insert(0, '..')
-
-from analysis.sequence_processor.sequence import SequenceProcessor
+from analysis.sequence_processor import SequenceProcessor
 
 
 def evolution_to_execution_path(

@@ -8,7 +8,7 @@ import streamlit as st
 
 from data_tools import get_group, preprocess_dataframe
 from graph_tools import evolution_to_graphviz
-from sequence_processor.sequence import SequenceProcessor
+from analysis.sequence_processor.sequence import SequenceProcessor
 from st_tools import check_password
 from analysis.data_loading import read_hackathon_data
 

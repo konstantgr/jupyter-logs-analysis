@@ -1,21 +1,15 @@
 import ast
-from ast import literal_eval
 from collections import defaultdict
 from pathlib import Path
-from typing import List, Dict
 
-import code_diff as cd
-import networkx as nx
-import numpy as np
 import pandas as pd
 from radon.raw import analyze
 from radon.visitors import ComplexityVisitor
 from tqdm import tqdm
 
 from analysis.data_loading import read_hackathon_data
-from sequence_processor.sequence import SequenceProcessor
-from sequence_processor.snapshots import ExecutiveSnapshot
-from streamlit_app.graph_tools import evolution_to_networkx
+from analysis.sequence_processor.sequence import SequenceProcessor
+from analysis.sequence_processor.snapshots import ExecutiveSnapshot
 
 
 class MetricsProcessor:
@@ -28,118 +22,8 @@ class MetricsProcessor:
         }
         self.metrics_dataframes = defaultdict()
 
-    def _get_ast(self, source: str | None) -> ast.AST:
-        try:
-            return ast.parse(source)
-        except SyntaxError as e:
-            code_string = source.splitlines()
-            del code_string[e.lineno - 1]
-            code_string = '\n'.join(code_string)
-            return self._get_ast(code_string)
 
-    @staticmethod
-    def _preprocess_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
-        if 'expert' in list(df):
-            return df.drop('expert', axis=1).fillna(np.NaN).replace(np.NaN, None).iloc[:]
 
-    @staticmethod
-    def _get_code_changes(prev: str | None, cur: str | None) -> List:
-        try:
-            output = cd.difference(prev, cur, lang="python")
-            return output.edit_script()
-        except ValueError:
-            return []
-
-    def get_objects_number(self, source: str | None) -> int:
-        if source is None:
-            return 0
-        source_ast, variables = self._get_ast(source), set()
-
-        for node in ast.walk(source_ast):
-            if isinstance(node, ast.Name) and isinstance(node.ctx, (ast.Load, ast.Store)):
-                variables.add(node.id)
-
-        return len(variables)
-
-    def get_cyclomatic_complexity(self, source: str | None) -> int:
-        if source is None:
-            return 0
-
-        source_ast = self._get_ast(source)
-        v = ComplexityVisitor.from_ast(source_ast)
-        return v.complexity
-
-    @staticmethod
-    def get_sloc(source: str | None) -> int:
-        if source is None:
-            return 0
-        try:
-            return analyze(source).sloc
-        except SyntaxError:
-            return len(source.splitlines())
-
-    def get_kernel_transitions(self, kernel_id: str, df: pd.DataFrame) -> List[Dict]:
-        transitions = []
-        cols = ['cell_index', 'cell_source', 'cell_num']
-        executions_list = df[cols].to_numpy()
-
-        prev_idx, prev_source, prev_num = executions_list[0]
-        for (idx, source, num) in executions_list[1:]:
-            code_changes = self._get_code_changes(prev_source, source) if idx == prev_idx else []
-            transitions.append({
-                'kernel_id': kernel_id,
-                'cell_idx_from': prev_idx, 'cell_num_from': prev_num, 'cell_source_from': prev_source,
-                'cell_idx_to': idx, 'cell_num_to': num, 'cell_source_to': source,
-                'inner_transition': idx == prev_idx,
-                'changes': code_changes
-            })
-            prev_idx, prev_source, prev_num = idx, source, num
-
-        return transitions
-
-    def get_execution_transitions(self, df: pd.DataFrame) -> pd.DataFrame:
-        grouped = df.groupby('event').get_group('execute').groupby('kernel_id')
-
-        transitions = []
-        for kernel_id, g in tqdm(grouped):
-            transitions += self.get_kernel_transitions(kernel_id, g)
-
-        transitions_df = pd.DataFrame(transitions)
-
-        self.metrics_dataframes['transitions'] = transitions_df
-        return transitions_df
-
-    def get_event_transitions(self, df: pd.DataFrame) -> pd.DataFrame:
-        grouped = df.groupby('kernel_id')
-
-        transitions = []
-        for kernel_id, g in tqdm(grouped):
-            events_list = g.event.to_numpy()
-            events_transitions = list(zip(events_list, events_list[1:]))
-            transitions += [
-                {"kernel_id": kernel_id, 'event_from': start, 'event_to': finish}
-                for (start, finish) in events_transitions
-            ]
-
-        transitions_df = pd.DataFrame(transitions)
-
-        self.metrics_dataframes['events_transitions'] = transitions_df
-        return transitions_df
-
-    def calculate_cell_metrics(self, df: pd.DataFrame, store: bool = True) -> pd.DataFrame:
-        calculated_metrics = [
-            {metric: fun(row.cell_source) for metric, fun
-             in self.cell_metrics_mapping[row.event].items()}
-            for _, row in df.iterrows()
-        ]
-        metrics_df = pd.DataFrame(calculated_metrics)
-        resulted_df = pd.concat([
-            df.reset_index(drop=True), metrics_df.reset_index(drop=True)
-        ], axis=1)
-
-        if store:
-            self.metrics_dataframes['cell_metrics'] = resulted_df
-        return resulted_df
 
     def aggregate_cells_metrics(self, snap: ExecutiveSnapshot, delete_duplicates: bool = True) -> dict[str, float]:
         if delete_duplicates:
@@ -186,108 +70,6 @@ class MetricsProcessor:
         self.metrics_dataframes['notebook_metrics'] = metrics_df
         return metrics_df
 
-    @staticmethod
-    def match_executions(cell_df):
-
-        looking_for_finish = False
-        found = {
-            'executions': [],
-            'unexecuted': [],
-            'hagning_finish': []
-        }
-
-        cell_df['result'] = cell_df.cell_output.apply(
-            lambda x: '' if (x is None) | (x == '[]') else '' + literal_eval(x)[0]['output_type'])
-
-        for i, row in cell_df.iterrows():
-            if row.event == 'execute':
-                looking_for_finish = i
-            if row.event == 'finished_execute':
-                if looking_for_finish:
-                    found['executions'].append(tuple([looking_for_finish, i]))
-                    looking_for_finish = None
-                else:
-                    found['hagning_finish'].append(i)
-
-        cell_df['execution_time'] = None
-        cell_df['execution_result'] = 'ok'
-        for execution in found['executions']:
-            cell_df.loc[execution[0], 'execution_time'] = cell_df.loc[execution[1], 'time']
-            cell_df.loc[execution[0], 'execution_result'] = cell_df.loc[execution[1], 'result']
-
-        return cell_df
-
-    @staticmethod
-    def match_edits(cell_df):
-
-        edit_state = None
-        found = {
-            'edited': [],
-            'unedited': [],
-            'uncreated': [],
-        }
-
-        for i, row in cell_df.iterrows():
-            if (row.event == 'finished_execute') or (row.event == 'create'):
-                edit_state = i
-            if row.event == 'execute':
-                if edit_state:
-                    found['edited'].append(tuple([edit_state, i]))
-                    edit_state = None
-                else:
-                    found['uncreated'].append(i)
-
-        cell_df['edited_time'] = None
-        for edited in found['edited']:
-            cell_df.loc[edited[0], 'edited_time'] = cell_df.loc[edited[1], 'time']
-
-        return cell_df
-
-    @staticmethod
-    def get_graph_modularity(G: nx.Graph) -> float | None:
-        if not len(G.nodes):
-            return None
-        H = nx.Graph(G)
-        community = nx.community.label_propagation_communities(H)
-        modularity = nx.community.modularity(H, community)
-        return modularity
-
-    @staticmethod
-    def get_graph_average_degree(G: nx.Graph) -> float | None:
-        if not len(G.nodes):
-            return None
-        return 2 * len(G.edges) / len(G.nodes)
-
-    @staticmethod
-    def get_graph_average_clustering(G: nx.Graph) -> float | None:
-        if not len(G.nodes):
-            return None
-        H = nx.Graph(G)
-        return nx.average_clustering(H)
-
-    def calculate_graph_metrics(self, df: pd.DataFrame) -> pd.DataFrame:
-        calculated_metrics = []
-        graph_metrics_mapping = {
-            'modularity': self.get_graph_modularity,
-            'average_degree': self.get_graph_average_degree,
-            'average_clustering': self.get_graph_average_clustering
-        }
-
-        grouped = self._preprocess_dataframe_columns(df).groupby('kernel_id')
-        for kernel_id, g in tqdm(list(grouped)[1:]):
-            processor = SequenceProcessor(g)
-            G = evolution_to_networkx(processor, len(processor.snapshots))
-
-            metrics_tmp = {}
-            for metric, fun in graph_metrics_mapping.items():
-                metrics_tmp[metric] = fun(G)
-
-            calculated_metrics.append({
-                'kernel_id': kernel_id,
-                **metrics_tmp
-            })
-
-        return pd.DataFrame(calculated_metrics)
 
 
 if __name__ == '__main__':

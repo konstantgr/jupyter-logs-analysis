@@ -3,7 +3,7 @@ import random
 import numpy as np
 import pandas as pd
 
-from sequence_processor.sequence import SequenceProcessor
+from analysis.sequence_processor.sequence import SequenceProcessor
 
 random.seed(42)
 
