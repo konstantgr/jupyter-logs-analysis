@@ -1,7 +1,9 @@
 from typing import List, Dict
-from tqdm import tqdm
+
 import code_diff as cd
 import pandas as pd
+from tqdm import tqdm
+
 from .metrics_base import Metrics
 
 

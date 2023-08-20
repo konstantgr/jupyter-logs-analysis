@@ -1,10 +1,7 @@
-import ast
 from collections import defaultdict
 from pathlib import Path
 
 import pandas as pd
-from radon.raw import analyze
-from radon.visitors import ComplexityVisitor
 from tqdm import tqdm
 
 from analysis.data_loading import read_hackathon_data
@@ -21,9 +18,6 @@ class MetricsProcessor:
             'ccn': self.get_cyclomatic_complexity
         }
         self.metrics_dataframes = defaultdict()
-
-
-
 
     def aggregate_cells_metrics(self, snap: ExecutiveSnapshot, delete_duplicates: bool = True) -> dict[str, float]:
         if delete_duplicates:
@@ -69,7 +63,6 @@ class MetricsProcessor:
         metrics_df = pd.DataFrame(calculated_metrics)
         self.metrics_dataframes['notebook_metrics'] = metrics_df
         return metrics_df
-
 
 
 if __name__ == '__main__':

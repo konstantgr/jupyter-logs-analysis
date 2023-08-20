@@ -5,12 +5,10 @@ import pandas as pd
 from ..sequence_processor.sequence import SequenceProcessor
 
 
-class MetricsProcessor():
+class MetricsProcessor:
 
     def __init__(self, clean_df):
         self.clean_df = clean_df
-
-
 
     def calculate_graph_metrics(self, df: pd.DataFrame) -> pd.DataFrame:
         graph_metrics = []

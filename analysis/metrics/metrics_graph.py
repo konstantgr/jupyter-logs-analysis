@@ -1,5 +1,6 @@
 import networkx as nx
 import pandas as pd
+
 from metrics_base import Metrics
 
 
@@ -14,11 +15,11 @@ class GraphMetrics(Metrics):
         }
         self.kernel_id = kernel_id
 
-    def calculate_metrics(self):
+    def calculate_metrics(self, _=None):
         calculated_metrics = []
 
         if not len(self.G.nodes):
-            return pd.DataFrame(None, columns=self.graph_metrics_mapping.keys())
+            return pd.DataFrame(None, columns=list(self.graph_metrics_mapping.keys()))
 
         # we can realise it w/o tmp variables
         metrics_tmp = {}
@@ -27,7 +28,7 @@ class GraphMetrics(Metrics):
 
         calculated_metrics.append({
             'kernel_id': self.kernel_id,
-            **metrics_tmp
+            **{metric: fun() for metric, fun in self.graph_metrics_mapping.items()}
         })
 
         return pd.DataFrame(calculated_metrics)
@@ -42,4 +43,3 @@ class GraphMetrics(Metrics):
 
     def get_graph_average_clustering(self) -> float | None:
         return nx.average_clustering(self.G)
-

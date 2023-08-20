@@ -1,9 +1,11 @@
-from collections import defaultdict
 import ast
+from collections import defaultdict
+from functools import reduce
+
+import pandas as pd
 from radon.raw import analyze
 from radon.visitors import ComplexityVisitor
-import pandas as pd
-from functools import reduce
+
 from metrics_base import Metrics
 
 
@@ -57,10 +59,9 @@ class CellsMetrics(Metrics):
     def aggregate_cells_metrics(self, df_metrics) -> pd.DataFrame:
 
         agg_list = ['kernel_id'] + self.get_all_metrics()
-        df_metrics = df_metrics.loc[:,agg_list].groupby('kernel_id').agg(['mean', 'sum'])
+        df_metrics = df_metrics.loc[:, agg_list].groupby('kernel_id').agg(['mean', 'sum'])
 
         return df_metrics
-
 
     def _get_ast(self, source: str | None) -> ast.AST:
         try:
