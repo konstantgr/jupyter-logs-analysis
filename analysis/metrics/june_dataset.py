@@ -36,19 +36,19 @@ class JuNEDataset:
         df = df.sort_values(by=['time']).replace({np.nan: None})
         return df
 
-    def to_evolution_dataframe(self) -> pd.DataFrame:
+    def to_evolution_dataframe(self, **kwargs) -> pd.DataFrame:
         if self.df_states is not None:
             return self.df_states
 
         kernel_dataframes = [
-            self.get_kernel_states(kernel_id)
+            self.get_kernel_states(kernel_id, **kwargs)
             for kernel_id in tqdm(self.df_june.kernel_id.unique())
         ]
         merged_df = pd.concat(kernel_dataframes)
         self.df_states = merged_df
         return merged_df
 
-    def get_kernel_states(self, kernel_id: str) -> pd.DataFrame:
+    def get_kernel_states(self, kernel_id: str, filter_state: bool = True) -> pd.DataFrame:
         kernel_df = self.df_june.groupby('kernel_id').get_group(kernel_id)
 
         state, state_tmp = NotebookState(), NotebookState()
@@ -58,8 +58,12 @@ class JuNEDataset:
             action_id = log_row.id
             state_tmp = deepcopy(state)
             state_tmp.update_state(log_row)
+            if filter_state:
+                state_tmp = delete_duplicates(state_tmp)
+
             df = state_tmp.to_dataframe()
             df['action_id'] = action_id
+            df['event'] = log_row.event
 
             states.append(df)
             state = state_tmp
@@ -159,7 +163,7 @@ class NotebookState:
         self.index_order = deque()
         self.index_num_mapping = {}
         self.index_source_mapping = {}
-        self.log = None
+        self.log = dict()
         self.state_num = 0
 
     def display_notebook(self, cell_separator: str = "[CELL_SEPARATOR]") -> None:
@@ -179,6 +183,10 @@ class NotebookState:
         cells_dictionaries = [asdict(c) for c in self.cells]
         df = pd.DataFrame(cells_dictionaries)
         df['state_num'] = self.state_num
+
+        for key, value in self.log.items():
+            if key not in list(df):
+                df[key] = value
         return df
 
     def create_cell(self, cell: Cell) -> None:
@@ -250,12 +258,7 @@ class NotebookState:
     def update_state(self, log: pd.Series) -> None:
         action, cell_index, cell_num, cell_source = log.event, log.cell_index, log.cell_num, log.cell_source
         cell_num = int(cell_num) if cell_num is not None else cell_num
-        self.log = {
-            'event': action,
-            'cell_num': cell_num,
-            'cell_index': cell_index,
-            'cell_source': cell_source
-        }
+        self.log = log.to_dict()
         self.state_num += 1
         if action == "save_notebook":
             self.initialize_indices(cell_source)
