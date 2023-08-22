@@ -2,9 +2,15 @@
 name = "jupyter-logging-backend"
 version = "0.1.0"
 description = ""
-authors = ["konstantgr <konstantin.grotov@jetbrains.com>"]
+authors = [
+    "konstantgr <konstantin.grotov@jetbrains.com>"
+]
 readme = "README.md"
-packages = [{include = "jupyter_logging_backend"}]
+packages = [
+    { include = "analysis" },
+    { include = "server" },
+    { include = "web" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -26,6 +32,11 @@ sqlalchemy = "^2.0.20"
 flask = "^2.3.2"
 sqlalchemy-utils = "^0.41.1"
 sqlalchemy = "^2.0.20"
+flask-cors = "^4.0.0"
+flask-sqlalchemy = "^3.0.5"
+
+[tool.poetry.scripts]
+run_server = 'server.app:run_server'
 
 [build-system]
 requires = ["poetry-core"]

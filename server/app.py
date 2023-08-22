@@ -6,9 +6,10 @@ from flask import request, Flask, render_template
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 
-from db_structures import UserLogs
+from server import MAIN_FOLDER
+from server.db_structures import UserLogs
 
-with Path("app_config.yaml").open("r") as stream:
+with (MAIN_FOLDER.parent / Path("app_config.yaml")).open("r") as stream:
     try:
         config = yaml.safe_load(stream)
     except yaml.YAMLError as exc:
@@ -52,5 +53,9 @@ def add_message():
     return content
 
 
-if __name__ == "__main__":
+def run_server() -> None:
     app.run(host=host, port=port)
+
+
+if __name__ == "__main__":
+    run_server()
