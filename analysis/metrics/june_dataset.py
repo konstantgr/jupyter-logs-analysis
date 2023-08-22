@@ -19,6 +19,10 @@ class JuNEDataset:
     def prepare_dataset(self):
         self.df_june = self._preprocess_dataframe_columns(self.df_june)
 
+    @property
+    def df(self):
+        return self.to_dataframe()
+
     def to_dataframe(self):
         return self.df_june
 

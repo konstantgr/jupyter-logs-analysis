@@ -1,8 +1,8 @@
-from metrics_graph import GraphMetrics
-from graph_tools import evolution_to_networkx
-from tqdm import tqdm
 import pandas as pd
-from ..sequence_processor.sequence import SequenceProcessor
+from tqdm import tqdm
+
+from analysis.metrics.utils.graph_tools import evolution_to_networkx
+from metrics_graph import GraphMetrics
 
 
 class MetricsProcessor:

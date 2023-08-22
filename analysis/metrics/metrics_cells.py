@@ -6,7 +6,7 @@ import pandas as pd
 from radon.raw import analyze
 from radon.visitors import ComplexityVisitor
 
-from metrics_base import Metrics
+from analysis.metrics.metrics_base import Metrics
 
 
 class CellsMetrics(Metrics):
@@ -21,38 +21,27 @@ class CellsMetrics(Metrics):
         self.metrics_dataframes = defaultdict()
 
     def get_all_metrics(self):
-        return [metric for key in self.cell_metrics_mapping.keys() for metric in self.cell_metrics_mapping[key].keys()]
+        return [
+            metric for metric_type in self.cell_metrics_mapping.keys()
+            for metric in self.cell_metrics_mapping[metric_type].keys()
+        ]
 
-    def calculate_metrics(self, df):
+    def calculate_metrics(self, df: pd.DataFrame) -> pd.DataFrame:
         cell_metrics = self.calculate_cell_metrics(df)
         aggregated_metrics = self.aggregate_cells_metrics(cell_metrics)
 
         return aggregated_metrics
 
-    def calculate_cell_metrics(self, df: pd.DataFrame, store: bool = True) -> pd.DataFrame:
-        # calculated_metrics = [
-        #     {metric: fun(row.cell_source) for metric, fun
-        #      in self.cell_metrics_mapping[row.event].items()}
-        #     for _, row in df.iterrows()
-        # ]
-
-        # for event, metrics in self.cell_metrics_mapping:
-        #     [df.cell_source.apply(fun) for fun in metrics.items()]
-        #
-        #
-        # metrics_df = pd.DataFrame(calculated_metrics)
-        # resulted_df = pd.concat([
-        #     df.reset_index(drop=True), metrics_df.reset_index(drop=True)
-        # ], axis=1)
+    def calculate_cell_metrics(self, df: pd.DataFrame) -> pd.DataFrame:
         dfs = [df]
         for event, metrics in self.cell_metrics_mapping.items():
-            dfs.extend([df[df.event == event].cell_source.apply(fun).rename(metric) for metric, fun in metrics.items()])
+            mask = (df.event.values == event)
+            dfs.extend(
+                [df[mask].cell_source.apply(fun).rename(metric)
+                 for metric, fun in metrics.items()]
+            )
 
         df_merged = reduce(lambda left, right: left.join(right), dfs)
-
-        # im not sure that we need it in such approach
-        if store:
-            self.metrics_dataframes['cell_metrics'] = df_merged
 
         return df_merged
 
