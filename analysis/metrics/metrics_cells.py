@@ -5,6 +5,7 @@ from functools import reduce
 import pandas as pd
 from radon.raw import analyze
 from radon.visitors import ComplexityVisitor
+from tqdm import tqdm
 
 from analysis.metrics.metrics_base import Metrics
 
@@ -33,17 +34,25 @@ class CellsMetrics(Metrics):
         return aggregated_metrics
 
     def calculate_cell_metrics(self, df: pd.DataFrame) -> pd.DataFrame:
-        dfs = [df]
-        for event, metrics in self.cell_metrics_mapping.items():
-            mask = (df.event.values == event)
-            dfs.extend(
-                [df[mask].cell_source.apply(fun).rename(metric)
-                 for metric, fun in metrics.items()]
-            )
-
-        df_merged = reduce(lambda left, right: left.join(right), dfs)
-
-        return df_merged
+        calculated_metrics = [
+            {metric: fun(row.cell_source) for metric, fun
+             in self.cell_metrics_mapping[row.event].items()}
+            for _, row in tqdm(df.iterrows())
+        ]
+        metrics_df = pd.DataFrame(calculated_metrics)
+        return pd.concat([
+            df.reset_index(drop=True), metrics_df.reset_index(drop=True)
+        ], axis=1)
+        # dfs = [df]
+        # for event, metrics in self.cell_metrics_mapping.items():
+        #     mask = (df.event.values == event)
+        #     dfs.extend(
+        #         [df[mask].cell_source.apply(fun).rename(metric)
+        #          for metric, fun in metrics.items()]
+        #     )
+        #
+        # df_merged = reduce(lambda left, right: left.join(right), dfs)
+        # return df_merged
 
     def aggregate_cells_metrics(self, df_metrics) -> pd.DataFrame:
 
