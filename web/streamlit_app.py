@@ -5,12 +5,12 @@ from pathlib import Path
 sys.path.insert(0, '..')
 
 import streamlit as st
-
-from data_tools import get_group, preprocess_dataframe
 from graph_tools import evolution_to_graphviz
-from analysis.sequence_processor.sequence import SequenceProcessor
-from st_tools import check_password
+
 from analysis.data_loading import read_hackathon_data
+from analysis.sequence_processor.sequence import SequenceProcessor
+from data_tools import get_group, preprocess_dataframe
+from st_tools import check_password
 
 
 def get_pdf_file(graph):

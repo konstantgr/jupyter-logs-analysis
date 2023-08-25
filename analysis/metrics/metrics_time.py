@@ -1,6 +1,9 @@
 from ast import literal_eval
+
 import pandas as pd
+
 from .metrics_base import Metrics
+
 
 class TimeMetrics(Metrics):
 
@@ -9,16 +12,16 @@ class TimeMetrics(Metrics):
 
     def calculate_metrics(self, df) -> pd.DataFrame:
         time_df = df.sort_values(['time', 'cell_index'])
-        time_df = time_df.loc[time_df.event.isin(['execute','create', 'finished_execute','delete']), :]
-        
+        time_df = time_df.loc[time_df.event.isin(['execute', 'create', 'finished_execute', 'delete']), :]
+
         executions_matched = time_df.groupby('cell_index', group_keys=True).apply(self.match_executions)
         executions_matched = executions_matched.reset_index(drop=True)
-        
+
         executions_matched = executions_matched.groupby('cell_index', group_keys=True).apply(self.match_edits)
         executions_matched = executions_matched.reset_index(drop=True)
 
         executions_matched = executions_matched.sort_values(['time', 'cell_index'])
-        executions_matched['state_time'] = executions_matched.execution_time.\
+        executions_matched['state_time'] = executions_matched.execution_time. \
             combine_first(executions_matched.edited_time)
 
         executions_matched.time = pd.to_datetime(executions_matched.time)
@@ -47,9 +50,9 @@ class TimeMetrics(Metrics):
 
         looking_for_finish = False
         found = {
-            'executions':[],
-            'unexecuted':[],
-            'hagning_finish':[]
+            'executions': [],
+            'unexecuted': [],
+            'hagning_finish': []
         }
 
         cell_df['result'] = cell_df.cell_output.apply(
@@ -85,9 +88,9 @@ class TimeMetrics(Metrics):
 
         edit_state = None
         found = {
-            'edited':[],
-            'unedited':[],
-            'uncreated':[],
+            'edited': [],
+            'unedited': [],
+            'uncreated': [],
         }
 
         for i, row in cell_df.iterrows():

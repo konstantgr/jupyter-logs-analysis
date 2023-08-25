@@ -1,18 +1,16 @@
-import sys
-from typing import Tuple, Any
+from typing import Tuple, Any, Optional
 
 import graphviz
 import matplotlib.pyplot as plt
 import networkx as nx
+import pandas as pd
 import pydotplus
 
-sys.path.insert(0, '..')
-
-from analysis.sequence_processor.sequence import SequenceProcessor
+from ..june_dataset import NotebookState
 
 
 def evolution_to_execution_path(
-        evolution: SequenceProcessor,
+        evolution: list[NotebookState],
         max_snap_num: int,
         min_snap_num: int = 1,
         hash_string_num: int = 8,
@@ -21,13 +19,13 @@ def evolution_to_execution_path(
 
     deleted_cells = [
         x.log.get('cell_index')
-        for x in evolution.snapshots[min_snap_num:max_snap_num]
+        for x in evolution[min_snap_num:max_snap_num]
         if x.log.get('event') == "delete"
     ]
 
     executions = filter(
         lambda x: (x.log.get('event') == "execute") and (x.log.get('cell_index') not in []),
-        evolution.snapshots[min_snap_num:max_snap_num]
+        evolution[min_snap_num:max_snap_num]
     )
 
     for snap in executions:
@@ -41,7 +39,7 @@ def evolution_to_execution_path(
 
 
 def evolution_to_graphviz(
-        evolution: SequenceProcessor,
+        evolution: list[NotebookState],
         max_snap_num: int,
         min_snap_num: int = 1,
         hash_string_num: int = 8,
@@ -52,7 +50,7 @@ def evolution_to_graphviz(
     graph.attr('edge', weight='0', arrowhead='none')
 
     prev = '0'
-    for i, (index, _) in enumerate(evolution.snapshots[max_snap_num - 1].index_order):
+    for i, (index, _) in enumerate(evolution[max_snap_num - 1].index_order):
         curr = index[:hash_string_num]
         graph.edge(prev, curr, weight='0')
         prev = curr
@@ -82,6 +80,25 @@ def evolution_to_graphviz(
     return graph
 
 
+def dataframe_to_graphviz(
+        df: pd.DataFrame,
+        graph: Optional[nx.Graph | nx.DiGraph] = None,
+        min_state_num: Optional[int] = None, max_state_num: Optional[int] = None,
+        hash_string_num: int = 8,
+) -> graphviz.Digraph:
+    edges, prev_cell_index = [], "0"
+    graph = graphviz.Digraph() if graph is None else graph
+
+    executions = df.iloc[min_state_num:max_state_num][df.event == "execute"]
+    for i, log_row in executions.iterrows():
+        cell_index = log_row.cell_index
+
+        cur_cell_index = cell_index[:hash_string_num]
+        graph.edge(prev_cell_index, cur_cell_index, label=f"{i}")
+        prev_cell_index = cur_cell_index
+    return graph
+
+
 def graphviz2networkx(g):
     dotplus = pydotplus.graph_from_dot_data(g.source)
     nx_graph = nx.nx_pydot.from_pydot(dotplus)
@@ -89,7 +106,7 @@ def graphviz2networkx(g):
 
 
 def evolution_to_networkx(
-        evolution: SequenceProcessor,
+        evolution: list[NotebookState],
         max_snap_num: int,
         min_snap_num: int = 1,
         hash_string_num: int = 8,

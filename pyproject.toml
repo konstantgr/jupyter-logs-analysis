@@ -1,0 +1,48 @@
+[tool.poetry]
+name = "jupyter-logging-backend"
+version = "0.1.0"
+description = ""
+authors = [
+    "konstantgr <konstantin.grotov@jetbrains.com>"
+]
+readme = "README.md"
+packages = [
+    { include = "analysis" },
+    { include = "server" },
+    { include = "web" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+jupyter = "1.0.0"
+pandas = "^2.0.3"
+pyyaml = "^6.0.1"
+graphviz = "^0.20.1"
+networkx = "^3.1"
+tqdm = "^4.66.1"
+radon = "^6.0.1"
+code-diff = "^0.1.2"
+pydotplus = "^2.0.2"
+matplotlib = "^3.7.2"
+seaborn = "^0.12.2"
+plotly = "^5.16.1"
+
+
+[tool.poetry.group.web.dependencies]
+streamlit = "^1.25.0"
+sqlalchemy = "^2.0.20"
+
+
+[tool.poetry.group.server.dependencies]
+flask = "^2.3.2"
+sqlalchemy-utils = "^0.41.1"
+sqlalchemy = "^2.0.20"
+flask-cors = "^4.0.0"
+flask-sqlalchemy = "^3.0.5"
+
+[tool.poetry.scripts]
+run_server = 'server.app:run_server'
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

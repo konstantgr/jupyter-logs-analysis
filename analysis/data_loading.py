@@ -34,6 +34,7 @@ def read_hackathon_data(config_path: Path, attach_users: bool = True) -> pd.Data
 
     dataframes = []
     for db_path in config['student_path']:
+        print(db_path)
         df_tmp = pd.read_sql_query(query, sqlite3.connect(base_path / db_path))
         df_tmp['expert'] = False
         dataframes.append(df_tmp)

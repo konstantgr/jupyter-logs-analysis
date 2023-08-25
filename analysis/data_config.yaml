@@ -1,6 +1,6 @@
 base_path: '../data/'
 expert_path: [ "hack_professional_db.db", "hack_professional_3_db.db" ]
-student_path: [ "students.db" ]
+student_path: [ "hack_db.db" ]
 students: [
   [
     '0033f76c-6179-4fb4-a9ce-79112a52b51c',
