@@ -24,6 +24,25 @@ class TimeMetrics(Metrics):
         executions_matched['state_time'] = executions_matched.execution_time. \
             combine_first(executions_matched.edited_time)
 
+        executions_matched.time = pd.to_datetime(executions_matched.time)
+        executions_matched.state_time = pd.to_datetime(executions_matched.state_time)
+
+        executions_matched['next_action_time'] = (executions_matched.time - executions_matched.time.shift(1)).dt.total_seconds().shift(-1)
+        executions_matched['state_time_dt'] = pd.to_datetime(executions_matched.state_time) - executions_matched.time
+        executions_matched.state_time_dt = executions_matched.state_time_dt.dt.total_seconds()
+
+        executions_matched = self.calculalte_interruptions(executions_matched)
+
+        return executions_matched
+
+    @staticmethod
+    def calculalte_interruptions(executions_matched):
+        executions_matched['interruptions'] = 0
+        for i, row in executions_matched.iterrows():
+            if executions_matched.loc[i].state_time is not None:
+                executions_matched.loc[i, 'interruptions'] = sum(executions_matched.time.between(
+                    executions_matched.loc[i].time, executions_matched.loc[i].state_time, inclusive='neither'))
+
         return executions_matched
 
     @staticmethod
