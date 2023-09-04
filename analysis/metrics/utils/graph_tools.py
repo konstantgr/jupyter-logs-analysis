@@ -90,7 +90,7 @@ def dataframe_to_graphviz(
     graph = graphviz.Digraph() if graph is None else graph
 
     executions = df.iloc[min_state_num:max_state_num][df.event == "execute"]
-    for i, log_row in executions.iterrows():
+    for i, (_, log_row) in enumerate(executions.iterrows()):
         cell_index = log_row.cell_index
 
         cur_cell_index = cell_index[:hash_string_num]
