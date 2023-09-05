@@ -34,11 +34,17 @@ class JuNEDataset:
         df['time'] = pd.to_datetime(df['time'])
         df['time'] = df.time.apply(lambda x: datetime.fromtimestamp(datetime.timestamp(x)))
         df = df.sort_values(by=['time']).replace({np.nan: None})
+
+        df['task'] = 'task2'
+        df.loc[df.notebook_name.str.contains('task1'), 'task'] = 'task1'
+
         return df
 
     def to_evolution_dataframe(self, **kwargs) -> pd.DataFrame:
         if self.df_states is not None:
             return self.df_states
+
+        kernel_df = self.df_june.groupby('kernel_id')
 
         kernel_dataframes = [
             self.get_kernel_states(kernel_id, **kwargs)

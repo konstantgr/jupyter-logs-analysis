@@ -6,7 +6,7 @@ import networkx as nx
 import pandas as pd
 import pydotplus
 
-from ..june_dataset import NotebookState
+from analysis.dataset.june_dataset import NotebookState
 
 
 def evolution_to_execution_path(

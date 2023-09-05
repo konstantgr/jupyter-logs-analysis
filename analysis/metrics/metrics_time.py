@@ -1,6 +1,7 @@
 from ast import literal_eval
 
 import pandas as pd
+import numpy as np
 
 from .metrics_base import Metrics
 
@@ -8,80 +9,121 @@ from .metrics_base import Metrics
 class TimeMetrics(Metrics):
 
     def __init__(self):
-        pass
+        self.unexpected_finish = []
+        self.unfinished = []
 
     def calculate_metrics(self, df) -> pd.DataFrame:
+
         time_df = df.sort_values(['time', 'cell_index'])
         time_df = time_df.loc[time_df.event.isin(['execute', 'create', 'finished_execute', 'delete']), :]
+        time_df.time = pd.to_datetime(time_df.time)
 
-        executions_matched = time_df.groupby('cell_index', group_keys=True).apply(self.match_executions)
-        executions_matched = executions_matched.reset_index(drop=True)
+        execution_times = time_df.groupby('kernel_id').apply(self.match_executions)
+        time_df = time_df.merge(execution_times, on=['index', 'cell_index'], how="left")
 
-        executions_matched = executions_matched.groupby('cell_index', group_keys=True).apply(self.match_edits)
-        executions_matched = executions_matched.reset_index(drop=True)
+        time_df = time_df.groupby('kernel_id').apply(self.calculate_interruptions).reset_index(drop=True)
+        time_df['src_len'] = time_df.cell_source.str.len()
+        time_df['execution_time_sec'] = time_df.execution_time.dt.total_seconds()
 
-        executions_matched = executions_matched.sort_values(['time', 'cell_index'])
-        executions_matched['state_time'] = executions_matched.execution_time. \
-            combine_first(executions_matched.edited_time)
 
-        executions_matched.time = pd.to_datetime(executions_matched.time)
-        executions_matched.state_time = pd.to_datetime(executions_matched.state_time)
+        # executions_matched = time_df.groupby('cell_index', group_keys=True).apply(self.match_executions)
+        # executions_matched = executions_matched.reset_index(drop=True)
+        #
+        # executions_matched = executions_matched.groupby('cell_index', group_keys=True).apply(self.match_edits)
+        # executions_matched = executions_matched.reset_index(drop=True)
 
-        executions_matched['next_action_time'] = (executions_matched.time - executions_matched.time.shift(1)).dt.total_seconds().shift(-1)
-        executions_matched['state_time_dt'] = pd.to_datetime(executions_matched.state_time) - executions_matched.time
-        executions_matched.state_time_dt = executions_matched.state_time_dt.dt.total_seconds()
+        # executions_matched = executions_matched.sort_values(['time', 'cell_index'])
+        # executions_matched['state_time'] = executions_matched.execution_time. \
+        #     combine_first(executions_matched.edited_time)
 
-        executions_matched = self.calculalte_interruptions(executions_matched)
 
-        return executions_matched
+        # time_df.state_time = pd.to_datetime(time_df.state_time)
+
+        time_df = self.calculate_next_action_time(time_df)
+
+        # executions_matched['state_time_dt'] = pd.to_datetime(executions_matched.state_time) - executions_matched.time
+        # executions_matched.state_time_dt = executions_matched.state_time_dt.dt.total_seconds()
+
+        # executions_matched = self.calculate_interruptions(executions_matched)
+
+        return time_df
 
     @staticmethod
-    def calculalte_interruptions(executions_matched):
-        executions_matched['interruptions'] = 0
-        for i, row in executions_matched.iterrows():
-            if executions_matched.loc[i].state_time is not None:
-                executions_matched.loc[i, 'interruptions'] = sum(executions_matched.time.between(
-                    executions_matched.loc[i].time, executions_matched.loc[i].state_time, inclusive='neither'))
-
-        return executions_matched
+    def calculate_next_action_time(metrics):
+        df_tmp = metrics.groupby('kernel_id').apply(lambda x: (x.time - x.time.shift(1)).dt.total_seconds().shift(-1))\
+            .reset_index(level=0)\
+            .drop(columns=['kernel_id'])
+        df_tmp.columns = ['next_action_time']
+        metrics = metrics.join(df_tmp)
+        return metrics
 
     @staticmethod
-    def match_executions(cell_df):
+    def calculate_interruptions(metric_df):
 
-        looking_for_finish = False
-        found = {
-            'executions': [],
-            'unexecuted': [],
-            'hagning_finish': []
-        }
+        metric_df['interruptions'] = 0
+        for i, row in metric_df.iterrows():
+            if row.execution_start is not None:
+                metric_df.loc[i, 'interruptions'] = sum(metric_df.time.between(
+                    row.execution_start, row.execution_start+row.execution_time, inclusive='neither'))
 
-        cell_df['result'] = cell_df.cell_output.apply(
-            lambda x: '' if (x is None) | (x == '[]') else '' + literal_eval(x)[0]['output_type'])
+        return metric_df
 
-        for i, row in cell_df.iterrows():
+
+    @staticmethod
+    def parse_result(raw_output):
+        result = '' if (raw_output is None) | (raw_output == '[]') else '' + literal_eval(raw_output)[0]['output_type']
+        return result
+
+    def match_executions(self, kernel_df):
+
+        kernel_df = kernel_df.sort_values(by='time')
+        all_executions = []
+        execution_queue = []
+
+        for i, row in kernel_df.iterrows():
             if row.event == 'execute':
-                looking_for_finish = i
+                # we collect queue of cells
+                if len(execution_queue) == 0:
+                    # we set starting execution time at the start of queue
+                    latest_time = row.time
+                # fill the queue
+
+                execution_queue.append((row.cell_index, row['index'], row.time, None, None))
+
             if row.event == 'finished_execute':
-                if looking_for_finish:
-                    found['executions'].append(tuple([looking_for_finish, i]))
-                    looking_for_finish = None
+                result = self.parse_result(row.cell_output)
+                # if we encounter finish with empty queue do something
+                if len(execution_queue) == 0:
+                    self.unexpected_finish.append((row.cell_index, row['index'], row.time, result))
+
+                # if we encounter finish we check if it is in queue
+                if row.cell_index in [n[0] for n in execution_queue]:
+                    # we look for the latest encounter of cell in our queue
+                    latest = max(i for i, n in enumerate(execution_queue) if n[0] == row.cell_index)
+                    # we calculate execution time (current time - time of the last queue input)
+
+                    # TODO: normal fix?
+                    latest_time = execution_queue[latest][2] if execution_queue[latest][2] > latest_time else latest_time
+
+                    execution_time = row.time - latest_time
+                    # write all information
+                    register_execution = (execution_queue[latest][1], row.cell_index,
+                                          execution_time, latest_time, result)
+                    all_executions.append(register_execution)
+                    # update latest time -- now we start next calculation in queue from this point
+                    latest_time = row.time
+                    # remove entry from queue
+                    del execution_queue[latest]
+                # finish cell and not in queue - do something
                 else:
-                    found['hagning_finish'].append(i)
+                    self.unexpected_finish.append((row.cell_index, row['index'], row.time, result))
 
-        cell_df['execution_time'] = None
-        cell_df['execution_result'] = 'ok'
-        # cell_test = cell_test.copy(deep=True)
-        for execution in found['executions']:
-            cell_df.loc[execution[0], 'execution_time'] = cell_df.loc[execution[1], 'time']
-            cell_df.loc[execution[0], 'execution_result'] = cell_df.loc[execution[1], 'result']
+        if len(execution_queue) != 0:
+            self.unfinished.append(execution_queue)
 
-        # if len(found['unexecuted']) > 0:
-        #     print(f'{cell_df.cell_index.iloc[0]} found unfinished executions')
+        return pd.DataFrame(all_executions, columns=['index', 'cell_index', 'execution_time',
+                                                     'execution_start', 'result'])
 
-        # if len(found['hagning_finish']) > 0:
-        #     print(f' {cell_df.cell_index.iloc[0]} found hagning finish')
-
-        return cell_df
 
     @staticmethod
     def match_edits(cell_df):
@@ -108,3 +150,5 @@ class TimeMetrics(Metrics):
             cell_df.loc[edited[0], 'edited_time'] = cell_df.loc[edited[1], 'time']
 
         return cell_df
+
+#%%
