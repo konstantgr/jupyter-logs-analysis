@@ -82,8 +82,12 @@ class JuNEDataset:
     def get_notebook_state_by_id(self, action_id: int) -> pd.DataFrame:
         df = self.to_evolution_dataframe()
         row = df.iloc[action_id]
+        state_num = row.state_num
         kernel_id = row.kernel_id
-        return df.iloc[:action_id].groupby('kernel_id').get_group(kernel_id)
+        return (
+            df.groupby('kernel_id').get_group(kernel_id).
+            groupby("state_num").get_group(state_num)
+        )
 
     @staticmethod
     def match_executions(cell_df):
