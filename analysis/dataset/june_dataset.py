@@ -38,6 +38,9 @@ class JuNEDataset:
         df['task'] = 'task2'
         df.loc[df.notebook_name.str.contains('task1'), 'task'] = 'task1'
 
+        df['expert'] = False
+        df.loc[df.user_id.str.contains('expert'), 'expert'] = True
+
         return df
 
     def to_evolution_dataframe(self, **kwargs) -> pd.DataFrame:
@@ -299,3 +302,5 @@ def delete_duplicates(state: NotebookState) -> NotebookState:
         if i not in set(list_index_to_delete)
     ]
     return state
+
+#%%
