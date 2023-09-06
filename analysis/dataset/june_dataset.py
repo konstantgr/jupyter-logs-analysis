@@ -28,8 +28,11 @@ class JuNEDataset:
 
     @staticmethod
     def _preprocess_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
-        if 'expert' in list(df):
-            df = df.drop('expert', axis=1).fillna(np.NaN).replace(np.NaN, None).iloc[:]
+
+        df = df.fillna(np.NaN).replace(np.NaN, None).iloc[:]
+
+        # if 'expert' in list(df):
+        #     df = df.drop('expert', axis=1).fillna(np.NaN).replace(np.NaN, None).iloc[:]
 
         df['time'] = pd.to_datetime(df['time'])
         df['time'] = df.time.apply(lambda x: datetime.fromtimestamp(datetime.timestamp(x)))
