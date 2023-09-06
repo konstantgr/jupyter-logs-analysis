@@ -55,7 +55,7 @@ class JuNEDataset:
         states = [state_tmp.to_dataframe()]
 
         for state_num, log_row in kernel_df.iterrows():
-            action_id = log_row['index']
+            action_id = log_row.action_id
             state_tmp = deepcopy(state)
             state_tmp.update_state(log_row)
             if filter_state:
