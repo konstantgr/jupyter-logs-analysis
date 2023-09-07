@@ -19,7 +19,7 @@ class TimeMetrics(Metrics):
         time_df.time = pd.to_datetime(time_df.time)
 
         execution_times = time_df.groupby('kernel_id').apply(self.match_executions)
-        time_df = time_df.merge(execution_times, on=['index', 'cell_index'], how="left")
+        time_df = time_df.merge(execution_times, on=['action_id', 'cell_index'], how="left")
 
         time_df = time_df.groupby('kernel_id').apply(self.calculate_interruptions).reset_index(drop=True)
         time_df['src_len'] = time_df.cell_source.str.len()
@@ -88,13 +88,13 @@ class TimeMetrics(Metrics):
                     latest_time = row.time
                 # fill the queue
 
-                execution_queue.append((row.cell_index, row['index'], row.time, None, None))
+                execution_queue.append((row.cell_index, row['action_id'], row.time, None, None))
 
             if row.event == 'finished_execute':
                 result = self.parse_result(row.cell_output)
                 # if we encounter finish with empty queue do something
                 if len(execution_queue) == 0:
-                    self.unexpected_finish.append((row.cell_index, row['index'], row.time, result))
+                    self.unexpected_finish.append((row.cell_index, row['action_id'], row.time, result))
 
                 # if we encounter finish we check if it is in queue
                 if row.cell_index in [n[0] for n in execution_queue]:
@@ -116,12 +116,12 @@ class TimeMetrics(Metrics):
                     del execution_queue[latest]
                 # finish cell and not in queue - do something
                 else:
-                    self.unexpected_finish.append((row.cell_index, row['index'], row.time, result))
+                    self.unexpected_finish.append((row.cell_index, row['action_id'], row.time, result))
 
         if len(execution_queue) != 0:
             self.unfinished.append(execution_queue)
 
-        return pd.DataFrame(all_executions, columns=['index', 'cell_index', 'execution_time',
+        return pd.DataFrame(all_executions, columns=['action_id', 'cell_index', 'execution_time',
                                                      'execution_start', 'result'])
 
 
