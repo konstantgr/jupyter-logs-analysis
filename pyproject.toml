@@ -25,8 +25,8 @@ code-diff = "^0.1.2"
 pydotplus = "^2.0.2"
 matplotlib = "^3.7.2"
 seaborn = "^0.12.2"
-plotly = "^5.16.1"
 pingouin = "^0.5.3"
+plotly = "^5.16.1"
 
 
 [tool.poetry.group.web.dependencies]
