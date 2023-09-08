@@ -14,7 +14,7 @@ class TimeMetrics(Metrics):
 
     def calculate_metrics(self, df) -> pd.DataFrame:
 
-        time_df = df.sort_values(['time', 'cell_index'])
+        time_df = df.sort_values('time')
         time_df = time_df.loc[time_df.event.isin(['execute', 'create', 'finished_execute', 'delete']), :]
         time_df.time = pd.to_datetime(time_df.time)
 
@@ -25,36 +25,26 @@ class TimeMetrics(Metrics):
         time_df['src_len'] = time_df.cell_source.str.len()
         time_df['execution_time_sec'] = time_df.execution_time.dt.total_seconds()
 
-
-        # executions_matched = time_df.groupby('cell_index', group_keys=True).apply(self.match_executions)
-        # executions_matched = executions_matched.reset_index(drop=True)
-        #
-        # executions_matched = executions_matched.groupby('cell_index', group_keys=True).apply(self.match_edits)
-        # executions_matched = executions_matched.reset_index(drop=True)
-
-        # executions_matched = executions_matched.sort_values(['time', 'cell_index'])
-        # executions_matched['state_time'] = executions_matched.execution_time. \
-        #     combine_first(executions_matched.edited_time)
-
-
-        # time_df.state_time = pd.to_datetime(time_df.state_time)
-
         time_df = self.calculate_next_action_time(time_df)
-
-        # executions_matched['state_time_dt'] = pd.to_datetime(executions_matched.state_time) - executions_matched.time
-        # executions_matched.state_time_dt = executions_matched.state_time_dt.dt.total_seconds()
-
-        # executions_matched = self.calculate_interruptions(executions_matched)
 
         return time_df
 
     @staticmethod
     def calculate_next_action_time(metrics):
-        df_tmp = metrics.groupby('kernel_id').apply(lambda x: (x.time - x.time.shift(1)).dt.total_seconds().shift(-1))\
+
+        df_tmp = metrics.loc[metrics.event.isin(['execute', 'create', 'delete']), :]
+
+        df_tmp = df_tmp.groupby('kernel_id').apply(lambda x: (x.time - x.time.shift(1)).shift(-1))\
             .reset_index(level=0)\
             .drop(columns=['kernel_id'])
         df_tmp.columns = ['next_action_time']
         metrics = metrics.join(df_tmp)
+        # metrics.loc[metrics.event == 'execute',
+        #                              'next_action_time'] = (metrics.loc[metrics.event == 'execute', 'next_action_time']
+        #                                                     - metrics.loc[metrics.event == 'execute', 'execution_time'])
+
+        metrics['next_action_time'] = metrics.next_action_time.dt.total_seconds()
+
         return metrics
 
     @staticmethod
