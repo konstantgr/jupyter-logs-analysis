@@ -17,10 +17,11 @@ class GraphMetrics(Metrics):
             'average_clustering': self.get_graph_average_clustering
         }
 
-    def calculate_metrics(self, df: pd.DataFrame) -> pd.DataFrame:
+    def calculate_metrics(self, df: pd.DataFrame, progress: bool = True) -> pd.DataFrame:
+        pbar = tqdm(df.groupby('kernel_id')) if progress else df.groupby('kernel_id')
         return pd.concat([
             self.calculate_kernel_metrics(df_kernel, kernel_id)
-            for (kernel_id, df_kernel) in tqdm(df.groupby('kernel_id'))
+            for (kernel_id, df_kernel) in pbar
         ])
 
     def calculate_kernel_metrics(self, df: pd.DataFrame, kernel_id: Optional[str] = None) -> pd.DataFrame:
