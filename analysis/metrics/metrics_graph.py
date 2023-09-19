@@ -14,7 +14,9 @@ class GraphMetrics(Metrics):
         self.graph_metrics_mapping = {
             'modularity': self.get_graph_modularity,
             'average_degree': self.get_graph_average_degree,
-            'average_clustering': self.get_graph_average_clustering
+            'average_clustering': self.get_graph_average_clustering,
+            'nodes_count': self.get_graph_nodes,
+            'edges_count': self.get_graph_edges,
         }
 
     def calculate_metrics(self, df: pd.DataFrame, progress: bool = True) -> pd.DataFrame:
@@ -49,6 +51,18 @@ class GraphMetrics(Metrics):
         community = nx.community.label_propagation_communities(H)
         modularity = nx.community.modularity(H, community)
         return modularity
+
+    @staticmethod
+    def get_graph_nodes(G: nx.Graph) -> float | None:
+        if not len(G.nodes):
+            return None
+        return len(G.nodes)
+
+    @staticmethod
+    def get_graph_edges(G: nx.Graph) -> float | None:
+        if not len(G.edges):
+            return None
+        return len(G.edges)
 
     @staticmethod
     def get_graph_average_degree(G: nx.Graph) -> float | None:
