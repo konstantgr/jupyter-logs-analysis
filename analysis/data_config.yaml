@@ -1,3 +1,4 @@
 dataset_path: "../data/dataset.csv"
 label_mapping_path: "../data/mapping_19_09.csv"
 graph_evolution_path: "../data/graph_evolution.csv"
+sample_path: "../data/sample_overview.csv"
