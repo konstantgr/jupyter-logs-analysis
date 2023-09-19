@@ -44,6 +44,8 @@ class JuNEDataset:
         df['expert'] = False
         df.loc[df.user_id.str.contains('expert'), 'expert'] = True
 
+        df['cell_label'] = df.cell_label.fillna("")
+
         return df
 
     def to_evolution_dataframe(self, **kwargs) -> pd.DataFrame:
