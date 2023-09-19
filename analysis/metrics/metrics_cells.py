@@ -1,6 +1,6 @@
 import ast
+import re
 from collections import defaultdict
-from functools import reduce
 
 import pandas as pd
 from radon.raw import analyze
@@ -17,7 +17,8 @@ class CellsMetrics(Metrics):
         self.cell_metrics_mapping['execute'] = {
             'objects': self.get_objects_number,
             'sloc': self.get_sloc,
-            'ccn': self.get_cyclomatic_complexity
+            'ccn': self.get_cyclomatic_complexity,
+            'comments': self.get_comments
         }
         self.metrics_dataframes = defaultdict()
 
@@ -95,5 +96,19 @@ class CellsMetrics(Metrics):
             return 0
         try:
             return analyze(source).sloc
+        except SyntaxError:
+            return len(source.splitlines())
+
+    @staticmethod
+    def get_comments(source: str | None, loc: bool = True) -> int:
+        def get_comments_len(input_string: str) -> int:
+            pattern = r'#(.*)'
+            matches = re.findall(pattern, input_string, re.MULTILINE)
+            return sum([len(match.strip()) for match in matches])
+
+        if source is None:
+            return 0
+        try:
+            return analyze(source).comments if loc else get_comments_len(source)
         except SyntaxError:
             return len(source.splitlines())

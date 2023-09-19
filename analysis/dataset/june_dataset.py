@@ -50,8 +50,6 @@ class JuNEDataset:
         if self.df_states is not None:
             return self.df_states
 
-        kernel_df = self.df_june.groupby('kernel_id')
-
         kernel_dataframes = [
             self.get_kernel_states(kernel_id, **kwargs)
             for kernel_id in tqdm(self.df_june.kernel_id.unique())
@@ -305,5 +303,3 @@ def delete_duplicates(state: NotebookState) -> NotebookState:
         if i not in set(list_index_to_delete)
     ]
     return state
-
-#%%

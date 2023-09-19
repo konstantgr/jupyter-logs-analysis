@@ -1,7 +1,6 @@
 from ast import literal_eval
 
 import pandas as pd
-import numpy as np
 
 from .metrics_base import Metrics
 
@@ -34,14 +33,16 @@ class TimeMetrics(Metrics):
 
         df_tmp = metrics.loc[metrics.event.isin(['execute', 'create', 'delete']), :]
 
-        df_tmp = df_tmp.groupby('kernel_id').apply(lambda x: (x.time - x.time.shift(1)).shift(-1))\
-            .reset_index(level=0)\
+        df_tmp = df_tmp.groupby('kernel_id').apply(lambda x: (x.time - x.time.shift(1)).shift(-1)) \
+            .reset_index(level=0) \
             .drop(columns=['kernel_id'])
         df_tmp.columns = ['next_action_time']
         metrics = metrics.join(df_tmp)
-        # metrics.loc[metrics.event == 'execute',
-        #                              'next_action_time'] = (metrics.loc[metrics.event == 'execute', 'next_action_time']
-        #                                                     - metrics.loc[metrics.event == 'execute', 'execution_time'])
+
+        # metrics.loc[metrics.event == 'execute', 'next_action_time'] = (
+        #         metrics.loc[metrics.event == 'execute', 'next_action_time']
+        #         - metrics.loc[metrics.event == 'execute', 'execution_time']
+        # )
 
         metrics['next_action_time'] = metrics.next_action_time.dt.total_seconds()
 
@@ -54,10 +55,9 @@ class TimeMetrics(Metrics):
         for i, row in metric_df.iterrows():
             if row.execution_start is not None:
                 metric_df.loc[i, 'interruptions'] = sum(metric_df.time.between(
-                    row.execution_start, row.execution_start+row.execution_time, inclusive='neither'))
+                    row.execution_start, row.execution_start + row.execution_time, inclusive='neither'))
 
         return metric_df
-
 
     @staticmethod
     def parse_result(raw_output):
@@ -93,7 +93,11 @@ class TimeMetrics(Metrics):
                     # we calculate execution time (current time - time of the last queue input)
 
                     # TODO: normal fix?
-                    latest_time = execution_queue[latest][2] if execution_queue[latest][2] > latest_time else latest_time
+                    latest_time = (
+                        execution_queue[latest][2]
+                        if execution_queue[latest][2] > latest_time
+                        else latest_time
+                    )
 
                     execution_time = row.time - latest_time
                     # write all information
@@ -113,7 +117,6 @@ class TimeMetrics(Metrics):
 
         return pd.DataFrame(all_executions, columns=['action_id', 'cell_index', 'execution_time',
                                                      'execution_start', 'result'])
-
 
     @staticmethod
     def match_edits(cell_df):
@@ -140,5 +143,3 @@ class TimeMetrics(Metrics):
             cell_df.loc[edited[0], 'edited_time'] = cell_df.loc[edited[1], 'time']
 
         return cell_df
-
-#%%

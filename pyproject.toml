@@ -29,11 +29,6 @@ pingouin = "^0.5.3"
 plotly = "^5.16.1"
 
 
-[tool.poetry.group.web.dependencies]
-streamlit = "^1.25.0"
-sqlalchemy = "^2.0.20"
-
-
 [tool.poetry.group.server.dependencies]
 flask = "^2.3.2"
 sqlalchemy-utils = "^0.41.1"
