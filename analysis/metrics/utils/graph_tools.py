@@ -1,6 +1,7 @@
 from typing import Tuple, Any, Optional
 
 import graphviz
+import matplotlib
 import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
@@ -84,17 +85,27 @@ def dataframe_to_graphviz(
         df: pd.DataFrame,
         graph: Optional[nx.Graph | nx.DiGraph] = None,
         min_state_num: Optional[int] = None, max_state_num: Optional[int] = None,
-        hash_string_num: int = 8,
+        hash_string_num: int = 8, cmap_name: str | None = None
 ) -> graphviz.Digraph:
     edges, prev_cell_index = [], "0"
     graph = graphviz.Digraph() if graph is None else graph
 
     executions = df.iloc[min_state_num:max_state_num][df.event == "execute"]
+
+    colorful = cmap_name is not None
+    if colorful:
+        size = len(executions)
+        cmap = matplotlib.cm.get_cmap(cmap_name)
+        norm = matplotlib.colors.Normalize(vmin=10.0, vmax=size)
+
     for i, (_, log_row) in enumerate(executions.iterrows()):
         cell_index = log_row.cell_index
-
+        params = {
+            "label": f"{i}",
+            "color": matplotlib.colors.to_hex(cmap(norm(i))) if colorful else "black"
+        }
         cur_cell_index = cell_index[:hash_string_num]
-        graph.edge(prev_cell_index, cur_cell_index, label=f"{i}")
+        graph.edge(prev_cell_index, cur_cell_index, **params)
         prev_cell_index = cur_cell_index
     return graph
 
