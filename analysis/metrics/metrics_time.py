@@ -101,8 +101,9 @@ class TimeMetrics(Metrics):
 
                     execution_time = row.time - latest_time
                     # write all information
+
                     register_execution = (execution_queue[latest][1], row.cell_index,
-                                          execution_time, latest_time, result)
+                                          execution_time, latest_time, row.cell_label, result)
                     all_executions.append(register_execution)
                     # update latest time -- now we start next calculation in queue from this point
                     latest_time = row.time
@@ -116,7 +117,7 @@ class TimeMetrics(Metrics):
             self.unfinished.append(execution_queue)
 
         return pd.DataFrame(all_executions, columns=['action_id', 'cell_index', 'execution_time',
-                                                     'execution_start', 'result'])
+                                                     'execution_start', 'matched_label', 'result'])
 
     @staticmethod
     def match_edits(cell_df):
