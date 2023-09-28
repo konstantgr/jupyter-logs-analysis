@@ -9,7 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 from server import MAIN_FOLDER
 from server.db_structures import UserLogs
 
-with (MAIN_FOLDER.parent / Path("app_config.yaml")).open("r") as stream:
+with (MAIN_FOLDER / Path("app_config.yaml")).open("r") as stream:
     try:
         config = yaml.safe_load(stream)
     except yaml.YAMLError as exc:

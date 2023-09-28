@@ -43,4 +43,4 @@ def create_db(db_path: Path):
 
 
 if __name__ == '__main__':
-    create_db(MAIN_FOLDER / "data/test_db.db")
+    create_db(MAIN_FOLDER / "../data/test_db.db")
