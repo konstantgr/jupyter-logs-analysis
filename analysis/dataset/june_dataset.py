@@ -31,9 +31,6 @@ class JuNEDataset:
 
         df = df.fillna(np.NaN).replace(np.NaN, None).iloc[:]
 
-        # if 'expert' in list(df):
-        #     df = df.drop('expert', axis=1).fillna(np.NaN).replace(np.NaN, None).iloc[:]
-
         df['time'] = pd.to_datetime(df['time'])
         df['time'] = df.time.apply(lambda x: datetime.fromtimestamp(datetime.timestamp(x)))
         df = df.sort_values(by=['time']).replace({np.nan: None})

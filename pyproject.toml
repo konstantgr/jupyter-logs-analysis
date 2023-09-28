@@ -1,10 +1,8 @@
 [tool.poetry]
-name = "jupyter-logging-backend"
+name = "jupyter-analysis"
 version = "0.1.0"
 description = ""
-authors = [
-    "konstantgr <konstantin.grotov@jetbrains.com>"
-]
+authors = []
 readme = "README.md"
 packages = [
     { include = "analysis" },
