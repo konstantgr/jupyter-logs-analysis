@@ -1,0 +1,21 @@
+User_id,Status,Expirience,Notebook use,ML,DA,Participated,note,Hacathon
+1,Student,36,Often (more then 3 times a week),TRUE,TRUE,yes,,YES
+2,Student,36,Sometimes (1-2 times a week),TRUE,TRUE,yes,,YES
+3,Student,12,Often (more then 3 times a week),TRUE,TRUE,yes,,YES
+4,Student,50,Often (more then 3 times a week),TRUE,TRUE,yes,,YES
+5,Student,20,Often (more then 3 times a week),TRUE,TRUE,yes,,YES
+6,Student,36,Often (more then 3 times a week),TRUE,TRUE,yes,,YES
+7,Student,50,Often (more then 3 times a week),TRUE,TRUE,yes,,YES
+8,Student,24,Often (more then 3 times a week),TRUE,TRUE,yes,,YES
+9,Student,36,Often (more then 3 times a week),TRUE,TRUE,yes,,NO
+10,Professional,54,Often (more then 3 times a week),TRUE,FALSE,yes,,NO
+11,Professional,80,Often (more then 3 times a week),TRUE,FALSE,yes,,NO
+12,Professional,12,Often (more then 3 times a week),FALSE,TRUE,yes,,NO
+13,Professional,48,Sometimes (1-2 times a week),TRUE,FALSE,yes,,NO
+14,Professional,120,Often (more then 3 times a week),TRUE,FALSE,yes,,NO
+15,Professional,56,Often (more then 3 times a week),FALSE,TRUE,yes,,NO
+16,Professional,18,Often (more then 3 times a week),FALSE,TRUE,yes,,NO
+17,Professional,59,Often (more then 3 times a week),FALSE,TRUE,yes,,NO
+18,Professional,60,Often (more then 3 times a week),FALSE,TRUE,yes,,NO
+19,Student,36,Sometimes (1-2 times a week),FALSE,TRUE,yes,,NO
+20,Student,30,Sometimes (1-2 times a week),FALSE,TRUE,yes,,NO
