@@ -44,16 +44,6 @@ class CellsMetrics(Metrics):
         return pd.concat([
             df.reset_index(drop=True), metrics_df.reset_index(drop=True)
         ], axis=1)
-        # dfs = [df]
-        # for event, metrics in self.cell_metrics_mapping.items():
-        #     mask = (df.event.values == event)
-        #     dfs.extend(
-        #         [df[mask].cell_source.apply(fun).rename(metric)
-        #          for metric, fun in metrics.items()]
-        #     )
-        #
-        # df_merged = reduce(lambda left, right: left.join(right), dfs)
-        # return df_merged
 
     def aggregate_cells_metrics(self, df_metrics) -> pd.DataFrame:
 

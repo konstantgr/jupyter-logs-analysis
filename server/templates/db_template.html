@@ -10,17 +10,17 @@
     <thead>
     <tr>
         {% for col in columns %}
-        <th>{{ col }}</th>
+            <th>{{ col }}</th>
         {% endfor %}
     </tr>
     </thead>
     <tbody>
     {% for row in rows %}
-    <tr>
-        {% for col in columns %}
-        <td>{{ row[col] }}</td>
-        {% endfor %}
-    </tr>
+        <tr>
+            {% for col in columns %}
+                <td>{{ row[col] }}</td>
+            {% endfor %}
+        </tr>
     {% endfor %}
     </tbody>
 </table>

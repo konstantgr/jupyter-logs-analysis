@@ -5,6 +5,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_utils import database_exists, create_database
 
+from server import MAIN_FOLDER
+
 base = declarative_base()
 
 
@@ -41,4 +43,4 @@ def create_db(db_path: Path):
 
 
 if __name__ == '__main__':
-    create_db(Path("../data/test_db2.db"))
+    create_db(MAIN_FOLDER / "data/test_db.db")
