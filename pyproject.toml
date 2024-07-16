@@ -43,6 +43,15 @@ ruff = "^0.5.2"
 catboost = "^1.2.5"
 sentence-transformers = "^3.0.1"
 
+
+[tool.poetry.group.notebook-reproduction.dependencies]
+python-dotenv = "^1.0.1"
+docker = "^7.1.0"
+selenium = "^4.22.0"
+omegaconf = "^2.3.0"
+pyperclip = "^1.9.0"
+strenum = "^0.4.15"
+
 [tool.poetry.scripts]
 run_server = 'server.app:run_server'
 
