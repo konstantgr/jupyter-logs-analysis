@@ -38,6 +38,11 @@ flask-sqlalchemy = "^3.0.5"
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.5.2"
 
+
+[tool.poetry.group.model-training.dependencies]
+catboost = "^1.2.5"
+sentence-transformers = "^3.0.1"
+
 [tool.poetry.scripts]
 run_server = 'server.app:run_server'
 
