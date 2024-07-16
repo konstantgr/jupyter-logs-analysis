@@ -1,9 +1,8 @@
 from pathlib import Path
 
-from sqlalchemy import Column, String, Integer, Text
-from sqlalchemy import create_engine
+from sqlalchemy import Column, Integer, String, Text, create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy_utils import database_exists, create_database
+from sqlalchemy_utils import create_database, database_exists
 
 from server import MAIN_FOLDER
 
@@ -11,7 +10,7 @@ base = declarative_base()
 
 
 class UserLogs(base):
-    __tablename__ = 'user_logs'
+    __tablename__ = "user_logs"
 
     id = Column(Integer, primary_key=True)
     ip_address = Column(String(50))
@@ -27,10 +26,7 @@ class UserLogs(base):
     cell_output = Column(Text)
 
     def as_dict(self):
-        return {
-            c.name: getattr(self, c.name)
-            for c in self.__table__.columns
-        }
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
 def create_db(db_path: Path):
@@ -42,5 +38,5 @@ def create_db(db_path: Path):
     base.metadata.create_all(engine)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     create_db(MAIN_FOLDER / "../data/test_db.db")
